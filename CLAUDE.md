@@ -44,3 +44,4 @@ The package follows the standard Python src-layout:
 - `src/bq_semgrep/` - Main package source code
 - `pyproject.toml` - Package configuration and dependencies
 - Entry point: `bq_semgrep:main` (configured in pyproject.toml)
+- this repo is managed with uv. always use uv add. do not use pip install.
