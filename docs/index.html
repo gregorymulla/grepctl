@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>grepctl - Multimodal Semantic Search for Cloud Data Lakes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --secondary: #50E3C2;
+            --dark: #1a1a2e;
+            --dark-light: #16213e;
+            --text: #ffffff;
+            --text-muted: #b8c1ec;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(74,144,226,0.1) 0%, transparent 70%);
+            animation: pulse 10s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #50E3C2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
+        }
+
+        /* Install Command */
+        .install-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.8s ease 0.4s backwards;
+        }
+
+        .install-title {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+        }
+
+        .command-box {
+            background: var(--dark);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .command-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(80,227,194,0.2), transparent);
+            animation: sweep 3s ease-in-out infinite;
+        }
+
+        @keyframes sweep {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .command-text {
+            color: var(--secondary);
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+
+        .copy-hint {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 4rem 0;
+        }
+
+        .features-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(74,144,226,0.3);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Modalities Section */
+        .modalities {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .modalities-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+        }
+
+        .modalities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .modality-item {
+            background: var(--dark);
+            border: 1px solid rgba(80,227,194,0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .modality-item:hover {
+            background: rgba(80,227,194,0.1);
+            transform: scale(1.05);
+        }
+
+        .modality-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modality-name {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        /* Interfaces Section */
+        .interfaces {
+            padding: 4rem 0;
+        }
+
+        .interfaces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .interface-card {
+            background: linear-gradient(135deg, rgba(74,144,226,0.1) 0%, rgba(80,227,194,0.1) 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+
+        .interface-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+        }
+
+        .interface-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .interface-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .interface-example {
+            background: var(--dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--secondary);
+            border-left: 3px solid var(--primary);
+        }
+
+        /* CTA Section */
+        .cta {
+            text-align: center;
+            padding: 4rem 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            margin: 3rem 0;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-desc {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            .tagline {
+                font-size: 1.2rem;
+            }
+            .nav-links {
+                display: none;
+            }
+            .command-box {
+                font-size: 1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <img src="grepctl_logo.png" alt="grepctl logo" style="height: 40px; vertical-align: middle; margin-right: 10px;">
+                grepctl
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#modalities">Modalities</a></li>
+                <li><a href="#interfaces">Interfaces</a></li>
+                <li><a href="https://github.com/gregorymulla/grepctl">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <img src="grepctl_logo.png" alt="grepctl" style="height: 120px; margin-bottom: 2rem; filter: drop-shadow(0 10px 30px rgba(80,227,194,0.3));">
+            <h1>grepctl</h1>
+            <p class="tagline">Multimodal Semantic Search Across Cloud Data Lakes</p>
+        </div>
+    </section>
+
+    <section class="install-section container">
+        <h2 class="install-title">🚀 Single Command to Get Started</h2>
+        <div class="command-box">
+            <code class="command-text">grepctl init my-project</code>
+        </div>
+        <p class="copy-hint">Click to copy • Sets up your entire semantic search infrastructure in seconds</p>
+    </section>
+
+    <section class="features container" id="features">
+        <h2 class="features-title">Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Instant Setup</h3>
+                <p class="feature-desc">One command creates your entire GCP infrastructure: BigQuery datasets, Cloud Storage buckets, and Vertex AI pipelines</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3 class="feature-title">Universal Search</h3>
+                <p class="feature-desc">Search across all your data with natural language queries, regardless of format or location</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">AI-Powered</h3>
+                <p class="feature-desc">Leverages Google's Gemini models for understanding context and semantic meaning in your searches</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Scalable</h3>
+                <p class="feature-desc">Built on Google Cloud Platform to handle petabytes of data with automatic scaling</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="modalities container" id="modalities">
+        <h2 class="modalities-title">🎨 8 Supported Modalities</h2>
+        <div class="modalities-grid">
+            <div class="modality-item">
+                <div class="modality-icon">📄</div>
+                <div class="modality-name">Text</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">🖼️</div>
+                <div class="modality-name">Images</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">🎵</div>
+                <div class="modality-name">Audio</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">🎥</div>
+                <div class="modality-name">Video</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">📑</div>
+                <div class="modality-name">PDF</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">📊</div>
+                <div class="modality-name">CSV</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">📋</div>
+                <div class="modality-name">JSON</div>
+            </div>
+            <div class="modality-item">
+                <div class="modality-icon">📁</div>
+                <div class="modality-name">Logs</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="interfaces container" id="interfaces">
+        <h2 class="features-title">🔧 Multiple Access Interfaces</h2>
+        <div class="interfaces-grid">
+            <div class="interface-card">
+                <div class="interface-icon">💻</div>
+                <h3 class="interface-title">CLI Search</h3>
+                <p class="feature-desc">Powerful command-line interface for developers and power users</p>
+                <div class="interface-example">
+                    $ grepctl search "error in authentication"<br>
+                    $ grepctl search --type=image "sunset"
+                </div>
+            </div>
+            <div class="interface-card">
+                <div class="interface-icon">🌐</div>
+                <h3 class="interface-title">Web Search</h3>
+                <p class="feature-desc">Beautiful web UI with real-time search and filtering capabilities</p>
+                <div class="interface-example">
+                    # Start web server<br>
+                    $ grepctl serve --port=8080
+                </div>
+            </div>
+            <div class="interface-card">
+                <div class="interface-icon">🗃️</div>
+                <h3 class="interface-title">SQL Interface</h3>
+                <p class="feature-desc">Query your multimodal data using familiar SQL syntax in BigQuery</p>
+                <div class="interface-example">
+                    SELECT * FROM semantic_index<br>
+                    WHERE similarity("product defect") > 0.8
+                </div>
+            </div>
+            <div class="interface-card">
+                <div class="interface-icon">🐍</div>
+                <h3 class="interface-title">Python API</h3>
+                <p class="feature-desc">Integrate semantic search directly into your Python applications</p>
+                <div class="interface-example">
+                    from grepctl import Client<br>
+                    results = client.search("insights")
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta container">
+        <h2 class="cta-title">Ready to Transform Your Data Search?</h2>
+        <p class="cta-desc">Join developers who are revolutionizing how they search and understand their data</p>
+        <div class="btn-group">
+            <a href="https://github.com/gregorymulla/grepctl" class="btn btn-primary">Get Started on GitHub</a>
+            <a href="https://pypi.org/project/grepctl/" class="btn btn-secondary">Install from PyPI</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 grepctl. Built with ❤️ for the data community.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Copy command on click
+        document.querySelector('.command-box').addEventListener('click', function() {
+            const command = this.querySelector('.command-text').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const hint = document.querySelector('.copy-hint');
+                hint.textContent = '✓ Copied to clipboard!';
+                setTimeout(() => {
+                    hint.textContent = 'Click to copy • Sets up your entire semantic search infrastructure in seconds';
+                }, 2000);
+            });
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

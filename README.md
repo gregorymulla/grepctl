@@ -1,8 +1,12 @@
-# grepctl - BigQuery Semantic Search Orchestrator
+<div align="center">
+  <img src="images/grepctl_logo.png" alt="grepctl logo" width="200">
 
-[![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  # grepctl - BigQuery Semantic Search Orchestrator
+
+  [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
+  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
 
 🚀 **One-command multimodal semantic search across your entire data lake using BigQuery ML and Google Cloud AI.**
 
