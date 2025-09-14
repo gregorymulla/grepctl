@@ -281,19 +281,20 @@ CALL `project.mmgrep.semantic_grep`('search query', 25);
 
 - **BigQuery Infrastructure**: Dataset `mmgrep` with all required tables
 - **External Tables**: 9 external tables connected to GCS data
-- **Data Ingestion**: 207 documents (100 text + 107 markdown files)
+- **Data Ingestion**: 238 documents (100 text + 107 markdown + 31 PDF files)
 - **Vertex AI Integration**: Text embedding model (`text-embedding-004`) deployed
-- **Embeddings**: All 207 documents have generated embeddings
+- **Embeddings**: All 238 documents have generated embeddings
 - **Semantic Search**: Fully functional with VECTOR_SEARCH
 - **Keyword Search**: Operational for all document types
+- **PDF Support**: Successfully ingesting and searching PDF documents
 
 ### 📊 Current Metrics
 
-- Total Documents: 207
-- Embeddings Generated: 207 (100% coverage)
+- Total Documents: 238
+- Embeddings Generated: 238 (100% coverage)
 - Embedding Dimensions: 1408 (text-embedding-004)
 - Search Latency: < 2 seconds for most queries
-- Supported Modalities: text, markdown (ready for pdf, images, audio, video)
+- Supported Modalities: text, markdown, PDF (ready for images, audio, video)
 
 ### 🔍 Example Searches
 

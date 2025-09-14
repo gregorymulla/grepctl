@@ -1,0 +1,127 @@
+# GrepCtl Configuration File
+# This file configures the BigQuery Semantic Grep (mmgrep) system
+
+# Google Cloud Project Settings
+project_id: semgrep-472018
+dataset: mmgrep
+location: US
+
+# Storage Settings
+bucket: gcm-data-lake
+prefix: multimodal-dataset
+
+# BigQuery Connections
+vertex_connection: vertex-ai-connection
+gcs_connection: gcs-connection
+
+# Model Configuration
+text_model: gemini-1.5-pro
+embedding_model: text-embedding-004
+
+# Processing Parameters
+batch_size: 100
+chunk_size: 1000
+chunk_overlap: 200
+max_workers: 4
+timeout_seconds: 300
+
+# Search Parameters
+default_top_k: 20
+search_multiplier: 5
+max_search_count: 200
+rerank_threshold: 50
+
+# Vector Index Settings
+index_type: IVF
+distance_type: COSINE
+ivf_min_train_size: 10000
+
+# API Rate Limits (requests per second)
+rate_limits:
+  vision_api: 2.0
+  document_ai: 0.5
+  speech_api: 1.0
+  video_api: 0.5
+
+# Modality Configuration
+modalities:
+  text:
+    enabled: true
+    extensions: ['.txt', '.log']
+    max_file_size_mb: 50
+
+  markdown:
+    enabled: true
+    extensions: ['.md', '.markdown']
+    max_file_size_mb: 50
+
+  pdf:
+    enabled: true
+    extensions: ['.pdf']
+    max_file_size_mb: 100
+    use_document_ai: true
+    use_pypdf2_fallback: true
+
+  images:
+    enabled: true
+    extensions: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp']
+    max_file_size_mb: 20
+    vision_features:
+      - label_detection
+      - object_localization
+      - text_detection
+      - image_properties
+      - face_detection
+
+  json:
+    enabled: true
+    extensions: ['.json', '.jsonl']
+    max_file_size_mb: 50
+    flatten_nested: true
+    max_depth: 5
+
+  csv:
+    enabled: true
+    extensions: ['.csv', '.tsv']
+    max_file_size_mb: 100
+    sample_rows: 10
+
+  audio:
+    enabled: true
+    extensions: ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac']
+    max_file_size_mb: 200
+    transcription_config:
+      language_code: en-US
+      enable_automatic_punctuation: true
+      enable_word_time_offsets: false
+
+  video:
+    enabled: true
+    extensions: ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv']
+    max_file_size_mb: 500
+    analysis_features:
+      - label_detection
+      - shot_change_detection
+      - explicit_content_detection
+      - speech_transcription
+
+# Logging Configuration
+logging:
+  level: INFO
+  file: ~/.grepctl/logs/grepctl.log
+  format: '%(asctime)s - %(levelname)s - %(message)s'
+
+# Resume and Recovery
+recovery:
+  enable_checkpoints: true
+  checkpoint_dir: ~/.grepctl/checkpoints
+  retry_failed: true
+  max_retries: 3
+
+# Advanced Options
+advanced:
+  parallel_processing: true
+  use_streaming_ingestion: false
+  enable_caching: true
+  cache_dir: ~/.grepctl/cache
+  cleanup_temp_files: true

@@ -13,8 +13,15 @@ dependencies = [
     "datasets>=4.0.0",
     "google-cloud-aiplatform>=1.113.0",
     "google-cloud-bigquery>=3.37.0",
+    "google-cloud-documentai>=3.6.0",
+    "google-cloud-speech>=2.33.0",
+    "google-cloud-videointelligence>=2.16.2",
+    "google-cloud-vision>=3.10.2",
+    "graphviz>=0.20.3",
     "imageio>=2.37.0",
     "imageio-ffmpeg>=0.6.0",
+    "matplotlib>=3.10.6",
+    "pypdf2>=3.0.1",
     "pyyaml>=6.0.2",
     "rich>=14.1.0",
     "tensorflow-datasets>=4.9.9",
@@ -28,3 +35,8 @@ bq-semgrep = "bq_semgrep:main"
 [build-system]
 requires = ["uv_build>=0.8.3,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "diagrams>=0.24.4",
+]
