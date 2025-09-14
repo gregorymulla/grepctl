@@ -1,0 +1,42 @@
+# BigQuery Semantic Grep Configuration
+# Copy this file to ~/.bq-semgrep/config.yaml and update with your settings
+
+# BigQuery settings
+project_id: "your-project-id"
+dataset_name: "mmgrep"
+location: "US"
+
+# GCS settings
+gcs_bucket: "gcm-data-lake"
+gcs_prefix: "multimodal-dataset"
+gcs_connection: ""  # Will be auto-generated if not provided
+
+# Model configurations
+# These will be auto-generated based on project_id and location if not provided
+text_model: ""
+embedding_model: ""
+
+# Chunking parameters
+chunk_size: 1000
+chunk_overlap: 200
+max_chunk_size: 1200
+
+# Search parameters
+default_top_k: 20
+search_multiplier: 5
+max_search_count: 200
+rerank_threshold: 50
+
+# Vector index parameters
+index_type: "IVF"
+distance_type: "COSINE"
+ivf_min_train_size: 10000
+
+# Processing parameters
+batch_size: 100
+max_workers: 4
+timeout_seconds: 300
+
+# Logging
+log_level: "INFO"
+log_file: null
