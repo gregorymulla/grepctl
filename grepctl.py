@@ -48,12 +48,12 @@ REQUIRED_APIS = [
 MODALITIES = {
     'text': {'extensions': ['.txt', '.log'], 'script': None},
     'markdown': {'extensions': ['.md', '.markdown'], 'script': None},
-    'pdf': {'extensions': ['.pdf'], 'script': 'extract_all_pdfs_hybrid.py'},
-    'images': {'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'], 'script': 'complete_vision_analysis.py'},
-    'json': {'extensions': ['.json', '.jsonl'], 'script': 'ingest_json_csv_fixed.py'},
-    'csv': {'extensions': ['.csv', '.tsv'], 'script': 'ingest_json_csv_fixed.py'},
-    'audio': {'extensions': ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac'], 'script': 'ingest_audio_files.py'},
-    'video': {'extensions': ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv'], 'script': 'ingest_video_files.py'},
+    'pdf': {'extensions': ['.pdf'], 'script': 'src/bq_semgrep/scripts/extract_all_pdfs_hybrid.py'},
+    'images': {'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'], 'script': None},  # complete_vision_analysis.py moved to obsolete
+    'json': {'extensions': ['.json', '.jsonl'], 'script': 'src/bq_semgrep/scripts/ingest_json_csv_fixed.py'},
+    'csv': {'extensions': ['.csv', '.tsv'], 'script': 'src/bq_semgrep/scripts/ingest_json_csv_fixed.py'},
+    'audio': {'extensions': ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac'], 'script': 'src/bq_semgrep/scripts/ingest_audio_files.py'},
+    'video': {'extensions': ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv'], 'script': 'src/bq_semgrep/scripts/ingest_video_files.py'},
 }
 
 
@@ -205,8 +205,8 @@ def init_all(bucket, project, dataset, auto_ingest):
 
         # Create tables
         task = progress.add_task("Creating tables and models...", total=1)
-        if Path('setup_mmgrep.py').exists():
-            ctl.run_python_script('setup_mmgrep.py')
+        if Path('src/bq_semgrep/scripts/setup_mmgrep.py').exists():
+            ctl.run_python_script('src/bq_semgrep/scripts/setup_mmgrep.py')
         progress.advance(task)
 
         # Auto-ingest if requested
@@ -224,7 +224,7 @@ def init_all(bucket, project, dataset, auto_ingest):
 
             # Generate embeddings
             console.print("[cyan]Generating embeddings...[/cyan]")
-            ctl.run_python_script('fix_embeddings.py')
+            ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
 
     console.print("[bold green]✅ System initialization complete![/bold green]")
     console.print("\n[cyan]Next steps:[/cyan]")
@@ -270,8 +270,8 @@ def init_dataset():
         return
 
     # Run setup script if available
-    if Path('setup_mmgrep.py').exists():
-        ctl.run_python_script('setup_mmgrep.py')
+    if Path('src/bq_semgrep/scripts/setup_mmgrep.py').exists():
+        ctl.run_python_script('src/bq_semgrep/scripts/setup_mmgrep.py')
     else:
         console.print("[yellow]setup_mmgrep.py not found, skipping table creation[/yellow]")
 
@@ -401,7 +401,7 @@ def ingest_all(bucket, resume):
 def ingest_pdf():
     """Ingest and process PDF files."""
     console.print("[cyan]Processing PDF files...[/cyan]")
-    if ctl.run_python_script('extract_all_pdfs_hybrid.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/extract_all_pdfs_hybrid.py'):
         console.print("[green]✓ PDF ingestion complete[/green]")
 
 
@@ -409,7 +409,7 @@ def ingest_pdf():
 def ingest_images():
     """Ingest and analyze images with Vision API."""
     console.print("[cyan]Processing images with Vision API...[/cyan]")
-    if ctl.run_python_script('complete_vision_analysis.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/complete_vision_analysis.py'):
         console.print("[green]✓ Image analysis complete[/green]")
 
 
@@ -417,7 +417,7 @@ def ingest_images():
 def ingest_audio():
     """Ingest and transcribe audio files."""
     console.print("[cyan]Processing audio files...[/cyan]")
-    if ctl.run_python_script('ingest_audio_files.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_audio_files.py'):
         console.print("[green]✓ Audio transcription complete[/green]")
 
 
@@ -425,7 +425,7 @@ def ingest_audio():
 def ingest_video():
     """Ingest and analyze video files."""
     console.print("[cyan]Processing video files...[/cyan]")
-    if ctl.run_python_script('ingest_video_files.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_video_files.py'):
         console.print("[green]✓ Video analysis complete[/green]")
 
 
@@ -433,7 +433,7 @@ def ingest_video():
 def ingest_json():
     """Ingest JSON and CSV files."""
     console.print("[cyan]Processing JSON/CSV files...[/cyan]")
-    if ctl.run_python_script('ingest_json_csv_fixed.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_json_csv_fixed.py'):
         console.print("[green]✓ JSON/CSV ingestion complete[/green]")
 
 
@@ -456,7 +456,7 @@ def index_rebuild():
         console.print("[green]✓ Index rebuilt successfully[/green]")
     else:
         console.print("[yellow]Index rebuild encountered issues, running fix...[/yellow]")
-        ctl.run_python_script('fix_embeddings.py')
+        ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
 
 
 @index.command('update')
@@ -465,7 +465,7 @@ def index_update():
     console.print("[cyan]Updating embeddings...[/cyan]")
 
     # Run fix_embeddings.py which handles all embedding updates
-    if ctl.run_python_script('fix_embeddings.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py'):
         console.print("[green]✓ Embeddings updated successfully[/green]")
 
 
@@ -521,7 +521,7 @@ def fix_embeddings():
     """Fix dimension mismatches and empty arrays."""
     console.print("[cyan]Fixing embedding issues...[/cyan]")
 
-    if ctl.run_python_script('fix_embeddings.py'):
+    if ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py'):
         console.print("[green]✓ Embedding issues resolved[/green]")
 
 
@@ -548,7 +548,7 @@ def fix_stuck(modality):
         console.print(f"[green]✓ Reset {job.num_dml_affected_rows} stuck embeddings[/green]")
 
     # Re-run fix script
-    ctl.run_python_script('fix_embeddings.py')
+    ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
 
 
 @fix.command('validate')
@@ -597,8 +597,8 @@ def status():
     console.print(Panel.fit("📊 [bold cyan]System Status[/bold cyan]", border_style="cyan"))
 
     # Run show_status.py if available
-    if Path('show_status.py').exists():
-        ctl.run_python_script('show_status.py')
+    if Path('src/bq_semgrep/scripts/show_status.py').exists():
+        ctl.run_python_script('src/bq_semgrep/scripts/show_status.py')
     else:
         # Fallback to basic status
         client = ctl.get_bq_client()
@@ -648,6 +648,48 @@ def search(query, top_k, modality, output):
         print(result.stdout)
     else:
         console.print(f"[red]Search failed: {result.stderr}[/red]")
+
+
+# ============= SERVE COMMAND =============
+@cli.command()
+@click.option('--host', '-h', default='0.0.0.0', help='Host to bind to')
+@click.option('--port', '-p', default=8000, help='Port to bind to')
+@click.option('--reload', is_flag=True, help='Enable auto-reload for development')
+@click.option('--theme-config', type=click.Path(exists=True), help='Path to theme configuration file')
+@click.option('--workers', '-w', default=1, help='Number of worker processes')
+def serve(host, port, reload, theme_config, workers):
+    """Start the REST API server with web UI."""
+    console.print(Panel.fit(
+        f"🚀 [bold cyan]Starting grepctl API Server[/bold cyan]\n"
+        f"[green]➜[/green] API: http://{host}:{port}/api/docs\n"
+        f"[green]➜[/green] Web UI: http://{host}:{port}",
+        border_style="cyan"
+    ))
+
+    try:
+        # Check if uvicorn is installed
+        try:
+            import uvicorn
+        except ImportError:
+            console.print("[red]Error: uvicorn not installed. Run: uv add 'uvicorn[standard]'[/red]")
+            sys.exit(1)
+
+        # Set theme config environment variable if provided
+        if theme_config:
+            os.environ['GREPCTL_THEME_CONFIG'] = theme_config
+
+        # Run the server
+        uvicorn.run(
+            "bq_semgrep.api.server:app",
+            host=host,
+            port=port,
+            reload=reload,
+            workers=workers if not reload else 1,
+            log_level="info"
+        )
+    except Exception as e:
+        console.print(f"[red]Failed to start server: {e}[/red]")
+        sys.exit(1)
 
 
 # ============= MAIN =============

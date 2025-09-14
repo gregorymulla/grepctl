@@ -1,0 +1,2 @@
+[console_scripts]
+grepctl = grepctl:main

@@ -1,0 +1,58 @@
+{
+  "branding": {
+    "companyName": "grepctl",
+    "logo": "/grepctl_logo.png",
+    "favicon": "/favicon.ico",
+    "tagline": "Multimodal Semantic Search Platform"
+  },
+  "colors": {
+    "primary": "#1976d2",
+    "secondary": "#dc004e",
+    "accent": "#9c27b0",
+    "background": "#ffffff",
+    "surface": "#f5f5f5",
+    "text": "#333333",
+    "textSecondary": "#666666",
+    "error": "#f44336",
+    "warning": "#ff9800",
+    "info": "#2196f3",
+    "success": "#4caf50"
+  },
+  "darkMode": {
+    "enabled": true,
+    "colors": {
+      "primary": "#90caf9",
+      "secondary": "#f48fb1",
+      "accent": "#ce93d8",
+      "background": "#121212",
+      "surface": "#1e1e1e",
+      "text": "#ffffff",
+      "textSecondary": "#aaaaaa",
+      "error": "#f44336",
+      "warning": "#ff9800",
+      "info": "#2196f3",
+      "success": "#4caf50"
+    }
+  },
+  "layout": {
+    "maxWidth": "1200px",
+    "borderRadius": "8px",
+    "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "headerHeight": "64px",
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px"
+    }
+  },
+  "features": {
+    "darkMode": true,
+    "exportEnabled": true,
+    "advancedFilters": true,
+    "keyboardShortcuts": true,
+    "realtimeSearch": true,
+    "searchHistory": true
+  }
+}

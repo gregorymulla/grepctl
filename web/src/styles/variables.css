@@ -1,0 +1,86 @@
+:root {
+  /* Primary Colors - Easily customizable */
+  --color-primary: var(--theme-primary, #1976d2);
+  --color-secondary: var(--theme-secondary, #dc004e);
+  --color-accent: var(--theme-accent, #9c27b0);
+
+  /* Background Colors */
+  --color-background: var(--theme-background, #ffffff);
+  --color-surface: var(--theme-surface, #f5f5f5);
+
+  /* Text Colors */
+  --color-text: var(--theme-text, #333333);
+  --color-text-secondary: var(--theme-text-secondary, #666666);
+
+  /* Status Colors */
+  --color-error: var(--theme-error, #f44336);
+  --color-warning: var(--theme-warning, #ff9800);
+  --color-info: var(--theme-info, #2196f3);
+  --color-success: var(--theme-success, #4caf50);
+
+  /* Layout */
+  --border-radius: var(--theme-border-radius, 8px);
+  --font-family: var(--theme-font-family, 'Inter', sans-serif);
+  --header-height: var(--theme-header-height, 64px);
+  --max-width: var(--theme-max-width, 1200px);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
+
+/* Dark mode variables */
+[data-theme="dark"] {
+  --color-primary: var(--theme-dark-primary, #90caf9);
+  --color-secondary: var(--theme-dark-secondary, #f48fb1);
+  --color-accent: var(--theme-dark-accent, #ce93d8);
+  --color-background: var(--theme-dark-background, #121212);
+  --color-surface: var(--theme-dark-surface, #1e1e1e);
+  --color-text: var(--theme-dark-text, #ffffff);
+  --color-text-secondary: var(--theme-dark-text-secondary, #aaaaaa);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.38);
+}
+
+/* Preset Themes */
+.theme-google {
+  --theme-primary: #4285f4;
+  --theme-secondary: #34a853;
+  --theme-accent: #fbbc04;
+  --theme-background: #ffffff;
+  --theme-surface: #f8f9fa;
+  --theme-text: #202124;
+}
+
+.theme-github {
+  --theme-primary: #24292e;
+  --theme-secondary: #0366d6;
+  --theme-accent: #28a745;
+  --theme-background: #ffffff;
+  --theme-surface: #f6f8fa;
+  --theme-text: #24292e;
+}
+
+.theme-enterprise {
+  --theme-primary: #003366;
+  --theme-secondary: #0066cc;
+  --theme-accent: #66b2ff;
+  --theme-background: #ffffff;
+  --theme-surface: #f0f4f8;
+  --theme-text: #1a1a1a;
+}

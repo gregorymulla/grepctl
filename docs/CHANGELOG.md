@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2024-01-14
+
+### Changed
+- Updated README with PyPI installation instructions
+- Added PyPI badges and package information
+- Focused documentation entirely on grepctl CLI
+- Improved installation and development setup documentation
+- Added citation information for academic users
+
+### Fixed
+- Removed deprecated references to bq-semgrep CLI
+- Clarified that grepctl is the primary tool
+
+### Documentation
+- Enhanced README with clearer installation from PyPI
+- Added development setup instructions
+- Updated all command examples to use installed grepctl
+
 ## [0.1.0] - 2024-01-14
 
 ### Added

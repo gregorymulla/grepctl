@@ -1,3 +1,72 @@
+Metadata-Version: 2.4
+Name: grepctl
+Version: 0.1.1
+Summary: One-command orchestration for multimodal semantic search in BigQuery
+Author-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
+Maintainer-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/grepctl
+Project-URL: Documentation, https://github.com/yourusername/grepctl#readme
+Project-URL: Repository, https://github.com/yourusername/grepctl.git
+Project-URL: Issues, https://github.com/yourusername/grepctl/issues
+Project-URL: Changelog, https://github.com/yourusername/grepctl/blob/main/CHANGELOG.md
+Keywords: bigquery,semantic-search,vector-search,multimodal,google-cloud,machine-learning,embeddings,gcs,vertex-ai,document-search
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Database
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Text Processing :: Indexing
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: click>=8.2.1
+Requires-Dist: google-cloud-aiplatform>=1.113.0
+Requires-Dist: google-cloud-bigquery>=3.37.0
+Requires-Dist: google-cloud-documentai>=3.6.0
+Requires-Dist: google-cloud-speech>=2.33.0
+Requires-Dist: google-cloud-videointelligence>=2.16.2
+Requires-Dist: google-cloud-vision>=3.10.2
+Requires-Dist: google-cloud-storage>=2.10.0
+Requires-Dist: pypdf2>=3.0.1
+Requires-Dist: pyyaml>=6.0.2
+Requires-Dist: rich>=14.1.0
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: fastapi>=0.104.0
+Requires-Dist: uvicorn[standard]>=0.24.0
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: python-multipart>=0.0.6
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.5.0; extra == "dev"
+Requires-Dist: diagrams>=0.24.4; extra == "dev"
+Provides-Extra: multimedia
+Requires-Dist: imageio>=2.37.0; extra == "multimedia"
+Requires-Dist: imageio-ffmpeg>=0.6.0; extra == "multimedia"
+Requires-Dist: matplotlib>=3.10.6; extra == "multimedia"
+Provides-Extra: research
+Requires-Dist: arxiv>=2.2.0; extra == "research"
+Requires-Dist: datasets>=4.0.0; extra == "research"
+Requires-Dist: tensorflow-datasets>=4.9.9; extra == "research"
+Requires-Dist: yt-dlp>=2025.9.5; extra == "research"
+Requires-Dist: graphviz>=0.20.3; extra == "research"
+Provides-Extra: server
+Requires-Dist: fastapi>=0.104.0; extra == "server"
+Requires-Dist: uvicorn[standard]>=0.24.0; extra == "server"
+Requires-Dist: pydantic>=2.5.0; extra == "server"
+Requires-Dist: python-multipart>=0.0.6; extra == "server"
+Requires-Dist: aiofiles>=23.2.1; extra == "server"
+Dynamic: license-file
+
 # grepctl - BigQuery Semantic Search Orchestrator
 
 [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
@@ -45,8 +114,44 @@ All searchable through semantic understanding, not just keywords!
 
 ## 🏗️ Architecture Overview
 
-
-![Architecture](images/mmgrep.png)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     GCS DATA LAKE                           │
+│                    (Your Documents)                         │
+│  📄 Text  📑 PDF  🖼️ Images  🎵 Audio  🎬 Video  📊 Data    │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                    ┌─────▼─────┐
+                    │  grepctl  │ ← One command orchestration
+                    └─────┬─────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        ▼                 ▼                 ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Ingestion    │  │ Google APIs  │  │ Processing   │
+│ • 6 scripts  │  │ • Vision     │  │ • Extract    │
+│ • All types  │  │ • Speech     │  │ • Transform  │
+│              │  │ • Video      │  │ • Enrich     │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+        └─────────────────┼─────────────────┘
+                          ▼
+                ┌─────────────────────┐
+                │  BigQuery Dataset   │
+                │   search_corpus     │
+                └─────────┬───────────┘
+                          ▼
+                ┌─────────────────────┐
+                │   Vertex AI         │
+                │ text-embedding-004  │
+                │  768 dimensions     │
+                └─────────┬───────────┘
+                          ▼
+                ┌─────────────────────┐
+                │  Semantic Search    │
+                │   VECTOR_SEARCH     │
+                │  <1 second query    │
+                └─────────────────────┘
+```
 
 ## 🛠️ Installation & Setup
 
@@ -144,9 +249,6 @@ Then open your browser to `http://localhost:8000` to access:
 - 🔍 Relevance scoring and result highlighting
 - 🌐 Touch-optimized interface for mobile devices
 
-![Architecture](images/web-ui.png)
-
-
 ### Command Line Interface
 
 ```bash
@@ -162,13 +264,6 @@ grepctl status
 # View all available commands
 grepctl --help
 ```
-
-```bash
-grepctl search "bird"
-```
-
-![Architecture](images/cli-search-result.png)
-
 
 ### SQL Interface
 
