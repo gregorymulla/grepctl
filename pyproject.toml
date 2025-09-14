@@ -1,40 +1,92 @@
 [project]
-name = "bq-semgrep"
+name = "grepctl"
 version = "0.1.0"
-description = "Add your description here"
+description = "One-command orchestration for multimodal semantic search in BigQuery"
 readme = "README.md"
 authors = [
     { name = "Gregory Mulla", email = "gregory.cr.mulla@gmail.com" }
 ]
+maintainers = [
+    { name = "Gregory Mulla", email = "gregory.cr.mulla@gmail.com" }
+]
+license = { text = "MIT" }
 requires-python = ">=3.11"
+keywords = [
+    "bigquery",
+    "semantic-search",
+    "vector-search",
+    "multimodal",
+    "google-cloud",
+    "machine-learning",
+    "embeddings",
+    "gcs",
+    "vertex-ai",
+    "document-search"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Indexing",
+]
 dependencies = [
-    "arxiv>=2.2.0",
     "click>=8.2.1",
-    "datasets>=4.0.0",
     "google-cloud-aiplatform>=1.113.0",
     "google-cloud-bigquery>=3.37.0",
     "google-cloud-documentai>=3.6.0",
     "google-cloud-speech>=2.33.0",
     "google-cloud-videointelligence>=2.16.2",
     "google-cloud-vision>=3.10.2",
-    "graphviz>=0.20.3",
-    "imageio>=2.37.0",
-    "imageio-ffmpeg>=0.6.0",
-    "matplotlib>=3.10.6",
+    "google-cloud-storage>=2.10.0",
     "pypdf2>=3.0.1",
     "pyyaml>=6.0.2",
     "rich>=14.1.0",
-    "tensorflow-datasets>=4.9.9",
     "tqdm>=4.67.1",
-    "yt-dlp>=2025.9.5",
 ]
 
+[project.urls]
+Homepage = "https://github.com/yourusername/grepctl"
+Documentation = "https://github.com/yourusername/grepctl#readme"
+Repository = "https://github.com/yourusername/grepctl.git"
+Issues = "https://github.com/yourusername/grepctl/issues"
+Changelog = "https://github.com/yourusername/grepctl/blob/main/CHANGELOG.md"
+
 [project.scripts]
-bq-semgrep = "bq_semgrep:main"
+grepctl = "grepctl:cli"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "diagrams>=0.24.4",
+]
+multimedia = [
+    "imageio>=2.37.0",
+    "imageio-ffmpeg>=0.6.0",
+    "matplotlib>=3.10.6",
+]
+research = [
+    "arxiv>=2.2.0",
+    "datasets>=4.0.0",
+    "tensorflow-datasets>=4.9.9",
+    "yt-dlp>=2025.9.5",
+    "graphviz>=0.20.3",
+]
 
 [build-system]
-requires = ["uv_build>=0.8.3,<0.9.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [

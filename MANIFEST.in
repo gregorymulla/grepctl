@@ -1,0 +1,37 @@
+# Include documentation and configuration files
+include README.md
+include LICENSE
+include CHANGELOG.md
+include pyproject.toml
+
+# Include example configuration files
+include config.yaml.example
+include .grepctl.yaml.example
+
+# Include documentation
+recursive-include docs *.md *.rst *.txt
+
+# Include example scripts
+recursive-include examples *.py *.yaml *.json
+
+# Include package data
+recursive-include src/bq_semgrep *.py *.yaml *.json
+
+# Exclude unnecessary files
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude *.so
+global-exclude *.dylib
+global-exclude .venv
+global-exclude venv
+global-exclude env
+global-exclude build
+global-exclude dist
+global-exclude *.egg-info
+global-exclude .pytest_cache
+global-exclude .mypy_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .tox
