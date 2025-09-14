@@ -1,6 +1,17 @@
-# BigQuery Semantic Grep (bq-semgrep)
+# grepctl - BigQuery Semantic Search Orchestrator
+
+[![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 🚀 **One-command multimodal semantic search across your entire data lake using BigQuery ML and Google Cloud AI.**
+
+## 📦 Installation
+
+```bash
+# Install from PyPI
+pip install grepctl
+```
 
 ## 🎯 Quick Start - From Zero to Search in One Command
 
@@ -20,9 +31,9 @@ That's it! The system automatically:
 - ✅ Generates 768-dimensional embeddings
 - ✅ Configures semantic search with VECTOR_SEARCH
 
-## 📊 What is BigQuery Semantic Grep?
+## 📊 What is grepctl?
 
-A unified SQL interface for searching across **8 different data types** stored in Google Cloud Storage:
+`grepctl` is a powerful command-line orchestration tool that transforms your Google Cloud Storage data lake into a searchable knowledge base. It provides a unified interface for searching across **8 different data types**:
 - 📄 **Text & Markdown** - Direct content extraction
 - 📑 **PDF Documents** - OCR with Document AI
 - 🖼️ **Images** - Vision API analysis (labels, text, objects, faces)
@@ -79,21 +90,33 @@ All searchable through semantic understanding, not just keywords!
 ### Prerequisites
 
 1. **Google Cloud Project** with billing enabled
-2. **Python 3.11+** and **uv** package manager
-3. **gcloud CLI** authenticated
+2. **Python 3.11+**
+3. **gcloud CLI** authenticated with appropriate permissions
 
-### Install grepctl
+### Install from PyPI
+
+```bash
+# Install the package
+pip install grepctl
+
+# Verify installation
+grepctl --help
+```
+
+### Install from Source
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/bq-semgrep.git
-cd bq-semgrep
+git clone https://github.com/yourusername/grepctl.git
+cd grepctl
 
-# Install dependencies
+# Install with uv (recommended)
 uv sync
+uv run grepctl --help
 
-# Verify installation
-uv run python grepctl.py --help
+# Or install with pip
+pip install -e .
+grepctl --help
 ```
 
 ### Complete System Setup
@@ -102,7 +125,7 @@ uv run python grepctl.py --help
 
 ```bash
 # One command does everything!
-uv run python grepctl.py init all --bucket your-bucket --auto-ingest
+grepctl init all --bucket your-bucket --auto-ingest
 
 # This single command:
 # 1. Enables 7 Google Cloud APIs
@@ -138,15 +161,17 @@ grepctl search "your query"
 ### Command Line Interface
 
 ```bash
-# Search with grepctl
+# Search across all data
 grepctl search "machine learning algorithms"
-grepctl search "error handling" -k 20 -m pdf -m markdown
 
-# Search with bq-semgrep
-uv run bq-semgrep search "data visualization" --top-k 10 --rerank
+# Search specific modalities
+grepctl search "error handling" -k 20 -m pdf -m markdown
 
 # Check system status
 grepctl status
+
+# View all available commands
+grepctl --help
 ```
 
 ### SQL Interface
@@ -171,10 +196,16 @@ FROM VECTOR_SEARCH(
 ORDER BY distance;
 ```
 
-### Python API
+### Python API (When installed from source)
 
 ```python
 from bq_semgrep.search.vector_search import SemanticSearch
+from bq_semgrep.bigquery.connection import BigQueryClient
+from bq_semgrep.config import load_config
+
+# Load configuration
+config = load_config()
+client = BigQueryClient(config)
 
 # Initialize searcher
 searcher = SemanticSearch(client, config)
@@ -208,9 +239,9 @@ results = searcher.search(
 | **Search** | `grepctl search "query"` | Semantic search |
 | **Status** | `grepctl status` | System health check |
 
-## 🧰 Management Tools
+## 🧰 grepctl Commands
 
-### grepctl - Complete CLI Management
+### Complete CLI Management
 
 ```bash
 # System initialization
@@ -339,9 +370,34 @@ grepctl fix embeddings
 - **Storage**: ~500MB for 425+ documents
 - **Accuracy**: 768-dimensional embeddings for semantic precision
 
+## 📦 Package Information
+
+- **PyPI**: https://pypi.org/project/grepctl/
+- **Version**: 0.1.0
+- **Requirements**: Python 3.11+, Google Cloud Project
+- **License**: MIT
+
 ## 🤝 Contributing
 
 Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/grepctl.git
+cd grepctl
+
+# Install in development mode with uv
+uv sync
+uv add --dev pytest black flake8
+
+# Run tests
+uv run pytest
+
+# Format code
+uv run black .
+```
 
 ## 📄 License
 
@@ -353,13 +409,28 @@ Built with:
 - Google BigQuery ML
 - Vertex AI (text-embedding-004)
 - Google Cloud Vision, Document AI, Speech-to-Text, Video Intelligence APIs
-- Python, uv, and rich CLI library
+- Python, Click, and Rich CLI libraries
+
+## 📊 Citation
+
+If you use grepctl in your research or project, please cite:
+
+```bibtex
+@software{grepctl2024,
+  title = {grepctl: One-Command Orchestration for Multimodal Semantic Search in BigQuery},
+  author = {Mulla, Gregory},
+  year = {2024},
+  url = {https://github.com/yourusername/grepctl},
+  version = {0.1.0}
+}
+```
 
 ---
 
-**Ready to search your entire data lake semantically?**
+**Ready to transform your data lake into a searchable knowledge base?**
 
 ```bash
+pip install grepctl
 grepctl init all --bucket your-bucket --auto-ingest
 ```
 
