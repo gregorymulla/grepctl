@@ -15,16 +15,18 @@
             --primary: #4A90E2;
             --primary-dark: #357ABD;
             --secondary: #50E3C2;
-            --dark: #1a1a2e;
-            --dark-light: #16213e;
-            --text: #ffffff;
-            --text-muted: #b8c1ec;
+            --accent: #667eea;
+            --dark: #2c3e50;
+            --text: #333333;
+            --text-muted: #6c757d;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
             --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: var(--bg-white);
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
@@ -39,12 +41,12 @@
         /* Header */
         header {
             padding: 2rem 0;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--bg-white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid #e9ecef;
         }
 
         nav {
@@ -56,9 +58,9 @@
         .logo {
             font-size: 1.8rem;
             font-weight: bold;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
         }
 
         .nav-links {
@@ -68,13 +70,14 @@
         }
 
         .nav-links a {
-            color: var(--text-muted);
+            color: var(--text);
             text-decoration: none;
             transition: color 0.3s;
+            font-weight: 500;
         }
 
         .nav-links a:hover {
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         /* Hero Section */
@@ -83,6 +86,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
 
         .hero::before {
@@ -109,7 +113,7 @@
         h1 {
             font-size: 3.5rem;
             margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #ffffff 0%, #50E3C2 100%);
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: fadeInUp 0.8s ease;
@@ -117,26 +121,27 @@
 
         .tagline {
             font-size: 1.5rem;
-            color: var(--text-muted);
+            color: var(--text);
             margin-bottom: 3rem;
             animation: fadeInUp 0.8s ease 0.2s backwards;
         }
 
         /* Install Command */
         .install-section {
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-light);
             border-radius: 20px;
             padding: 3rem;
-            margin: 3rem 0;
-            backdrop-filter: blur(10px);
+            margin: 3rem auto;
+            max-width: 900px;
             animation: fadeInUp 0.8s ease 0.4s backwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .install-title {
             font-size: 2rem;
             text-align: center;
             margin-bottom: 2rem;
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         .command-box {
@@ -150,6 +155,7 @@
             position: relative;
             overflow: hidden;
             margin-bottom: 1rem;
+            cursor: pointer;
         }
 
         .command-box::before {
@@ -169,7 +175,7 @@
         }
 
         .command-text {
-            color: var(--secondary);
+            color: #50E3C2;
             font-weight: bold;
             position: relative;
             z-index: 1;
@@ -185,13 +191,14 @@
         /* Features Grid */
         .features {
             padding: 4rem 0;
+            background: var(--bg-white);
         }
 
         .features-title {
             text-align: center;
             font-size: 2.5rem;
             margin-bottom: 3rem;
-            color: var(--text);
+            color: var(--dark);
         }
 
         .features-grid {
@@ -202,18 +209,18 @@
         }
 
         .feature-card {
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-white);
             border-radius: 16px;
             padding: 2rem;
             text-align: center;
             transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(74,144,226,0.3);
+            box-shadow: 0 10px 30px rgba(74,144,226,0.2);
             border-color: var(--primary);
         }
 
@@ -225,7 +232,7 @@
         .feature-title {
             font-size: 1.3rem;
             margin-bottom: 0.5rem;
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         .feature-desc {
@@ -235,17 +242,15 @@
 
         /* Modalities Section */
         .modalities {
-            background: rgba(255,255,255,0.03);
-            border-radius: 20px;
-            padding: 3rem;
-            margin: 3rem 0;
+            background: var(--bg-light);
+            padding: 4rem 0;
         }
 
         .modalities-title {
             text-align: center;
             font-size: 2rem;
             margin-bottom: 2rem;
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         .modalities-grid {
@@ -257,17 +262,19 @@
         }
 
         .modality-item {
-            background: var(--dark);
-            border: 1px solid rgba(80,227,194,0.3);
+            background: var(--bg-white);
+            border: 2px solid var(--primary);
             border-radius: 12px;
             padding: 1rem;
             text-align: center;
             transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .modality-item:hover {
-            background: rgba(80,227,194,0.1);
+            background: var(--primary);
             transform: scale(1.05);
+            color: white;
         }
 
         .modality-icon {
@@ -277,12 +284,13 @@
 
         .modality-name {
             font-size: 0.9rem;
-            color: var(--text);
+            font-weight: 500;
         }
 
         /* Interfaces Section */
         .interfaces {
             padding: 4rem 0;
+            background: var(--bg-white);
         }
 
         .interfaces-grid {
@@ -292,16 +300,18 @@
         }
 
         .interface-card {
-            background: linear-gradient(135deg, rgba(74,144,226,0.1) 0%, rgba(80,227,194,0.1) 100%);
+            background: var(--bg-white);
             border-radius: 16px;
             padding: 2rem;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid #e9ecef;
             transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .interface-card:hover {
             transform: translateY(-5px);
-            border-color: var(--secondary);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(74,144,226,0.2);
         }
 
         .interface-icon {
@@ -316,13 +326,13 @@
         }
 
         .interface-example {
-            background: var(--dark);
+            background: #2c3e50;
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1rem;
             font-family: monospace;
             font-size: 0.9rem;
-            color: var(--secondary);
+            color: #50E3C2;
             border-left: 3px solid var(--primary);
         }
 
@@ -330,9 +340,7 @@
         .cta {
             text-align: center;
             padding: 4rem 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            margin: 3rem 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
 
         .cta-title {
@@ -342,7 +350,7 @@
 
         .cta-desc {
             font-size: 1.2rem;
-            color: var(--text-muted);
+            color: var(--text);
             margin-bottom: 2rem;
         }
 
@@ -365,6 +373,7 @@
         .btn-primary {
             background: var(--gradient);
             color: white;
+            border: none;
         }
 
         .btn-primary:hover {
@@ -374,21 +383,22 @@
 
         .btn-secondary {
             background: transparent;
-            color: var(--secondary);
-            border: 2px solid var(--secondary);
+            color: var(--primary);
+            border: 2px solid var(--primary);
         }
 
         .btn-secondary:hover {
-            background: var(--secondary);
-            color: var(--dark);
+            background: var(--primary);
+            color: white;
         }
 
         /* Footer */
         footer {
             text-align: center;
             padding: 2rem 0;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid #e9ecef;
             color: var(--text-muted);
+            background: var(--bg-white);
         }
 
         /* Animations */
@@ -439,132 +449,142 @@
 
     <section class="hero">
         <div class="container hero-content">
-            <img src="grepctl_logo.png" alt="grepctl" style="height: 120px; margin-bottom: 2rem; filter: drop-shadow(0 10px 30px rgba(80,227,194,0.3));">
+            <img src="grepctl_logo.png" alt="grepctl" style="height: 120px; margin-bottom: 2rem; filter: drop-shadow(0 10px 30px rgba(102,126,234,0.3));">
             <h1>grepctl</h1>
             <p class="tagline">Multimodal Semantic Search Across Cloud Data Lakes</p>
         </div>
     </section>
 
-    <section class="install-section container">
-        <h2 class="install-title">🚀 Single Command to Get Started</h2>
-        <div class="command-box">
-            <code class="command-text">grepctl init my-project</code>
-        </div>
-        <p class="copy-hint">Click to copy • Sets up your entire semantic search infrastructure in seconds</p>
-    </section>
+    <div class="container">
+        <section class="install-section">
+            <h2 class="install-title">🚀 Single Command to Get Started</h2>
+            <div class="command-box">
+                <code class="command-text">grepctl init my-project</code>
+            </div>
+            <p class="copy-hint">Click to copy • Sets up your entire semantic search infrastructure in seconds</p>
+        </section>
+    </div>
 
-    <section class="features container" id="features">
-        <h2 class="features-title">Powerful Features</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3 class="feature-title">Instant Setup</h3>
-                <p class="feature-desc">One command creates your entire GCP infrastructure: BigQuery datasets, Cloud Storage buckets, and Vertex AI pipelines</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌐</div>
-                <h3 class="feature-title">Universal Search</h3>
-                <p class="feature-desc">Search across all your data with natural language queries, regardless of format or location</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3 class="feature-title">AI-Powered</h3>
-                <p class="feature-desc">Leverages Google's Gemini models for understanding context and semantic meaning in your searches</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3 class="feature-title">Scalable</h3>
-                <p class="feature-desc">Built on Google Cloud Platform to handle petabytes of data with automatic scaling</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="modalities container" id="modalities">
-        <h2 class="modalities-title">🎨 8 Supported Modalities</h2>
-        <div class="modalities-grid">
-            <div class="modality-item">
-                <div class="modality-icon">📄</div>
-                <div class="modality-name">Text</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">🖼️</div>
-                <div class="modality-name">Images</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">🎵</div>
-                <div class="modality-name">Audio</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">🎥</div>
-                <div class="modality-name">Video</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">📑</div>
-                <div class="modality-name">PDF</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">📊</div>
-                <div class="modality-name">CSV</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">📋</div>
-                <div class="modality-name">JSON</div>
-            </div>
-            <div class="modality-item">
-                <div class="modality-icon">📁</div>
-                <div class="modality-name">Logs</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="interfaces container" id="interfaces">
-        <h2 class="features-title">🔧 Multiple Access Interfaces</h2>
-        <div class="interfaces-grid">
-            <div class="interface-card">
-                <div class="interface-icon">💻</div>
-                <h3 class="interface-title">CLI Search</h3>
-                <p class="feature-desc">Powerful command-line interface for developers and power users</p>
-                <div class="interface-example">
-                    $ grepctl search "error in authentication"<br>
-                    $ grepctl search --type=image "sunset"
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="features-title">Powerful Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Instant Setup</h3>
+                    <p class="feature-desc">One command creates your entire GCP infrastructure: BigQuery datasets, Cloud Storage buckets, and Vertex AI pipelines</p>
                 </div>
-            </div>
-            <div class="interface-card">
-                <div class="interface-icon">🌐</div>
-                <h3 class="interface-title">Web Search</h3>
-                <p class="feature-desc">Beautiful web UI with real-time search and filtering capabilities</p>
-                <div class="interface-example">
-                    # Start web server<br>
-                    $ grepctl serve --port=8080
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3 class="feature-title">Universal Search</h3>
+                    <p class="feature-desc">Search across all your data with natural language queries, regardless of format or location</p>
                 </div>
-            </div>
-            <div class="interface-card">
-                <div class="interface-icon">🗃️</div>
-                <h3 class="interface-title">SQL Interface</h3>
-                <p class="feature-desc">Query your multimodal data using familiar SQL syntax in BigQuery</p>
-                <div class="interface-example">
-                    SELECT * FROM semantic_index<br>
-                    WHERE similarity("product defect") > 0.8
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">AI-Powered</h3>
+                    <p class="feature-desc">Leverages Google's Gemini models for understanding context and semantic meaning in your searches</p>
                 </div>
-            </div>
-            <div class="interface-card">
-                <div class="interface-icon">🐍</div>
-                <h3 class="interface-title">Python API</h3>
-                <p class="feature-desc">Integrate semantic search directly into your Python applications</p>
-                <div class="interface-example">
-                    from grepctl import Client<br>
-                    results = client.search("insights")
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Scalable</h3>
+                    <p class="feature-desc">Built on Google Cloud Platform to handle petabytes of data with automatic scaling</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="cta container">
-        <h2 class="cta-title">Ready to Transform Your Data Search?</h2>
-        <p class="cta-desc">Join developers who are revolutionizing how they search and understand their data</p>
-        <div class="btn-group">
-            <a href="https://github.com/gregorymulla/grepctl" class="btn btn-primary">Get Started on GitHub</a>
-            <a href="https://pypi.org/project/grepctl/" class="btn btn-secondary">Install from PyPI</a>
+    <section class="modalities" id="modalities">
+        <div class="container">
+            <h2 class="modalities-title">🎨 8 Supported Modalities</h2>
+            <div class="modalities-grid">
+                <div class="modality-item">
+                    <div class="modality-icon">📄</div>
+                    <div class="modality-name">Text</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">🖼️</div>
+                    <div class="modality-name">Images</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">🎵</div>
+                    <div class="modality-name">Audio</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">🎥</div>
+                    <div class="modality-name">Video</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">📑</div>
+                    <div class="modality-name">PDF</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">📊</div>
+                    <div class="modality-name">CSV</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">📋</div>
+                    <div class="modality-name">JSON</div>
+                </div>
+                <div class="modality-item">
+                    <div class="modality-icon">📁</div>
+                    <div class="modality-name">Logs</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="interfaces" id="interfaces">
+        <div class="container">
+            <h2 class="features-title">🔧 Multiple Access Interfaces</h2>
+            <div class="interfaces-grid">
+                <div class="interface-card">
+                    <div class="interface-icon">💻</div>
+                    <h3 class="interface-title">CLI Search</h3>
+                    <p class="feature-desc">Powerful command-line interface for developers and power users</p>
+                    <div class="interface-example">
+                        $ grepctl search "error in authentication"<br>
+                        $ grepctl search --type=image "sunset"
+                    </div>
+                </div>
+                <div class="interface-card">
+                    <div class="interface-icon">🌐</div>
+                    <h3 class="interface-title">Web Search</h3>
+                    <p class="feature-desc">Beautiful web UI with real-time search and filtering capabilities</p>
+                    <div class="interface-example">
+                        # Start web server<br>
+                        $ grepctl serve --port=8080
+                    </div>
+                </div>
+                <div class="interface-card">
+                    <div class="interface-icon">🗃️</div>
+                    <h3 class="interface-title">SQL Interface</h3>
+                    <p class="feature-desc">Query your multimodal data using familiar SQL syntax in BigQuery</p>
+                    <div class="interface-example">
+                        SELECT * FROM semantic_index<br>
+                        WHERE similarity("product defect") > 0.8
+                    </div>
+                </div>
+                <div class="interface-card">
+                    <div class="interface-icon">🐍</div>
+                    <h3 class="interface-title">Python API</h3>
+                    <p class="feature-desc">Integrate semantic search directly into your Python applications</p>
+                    <div class="interface-example">
+                        from grepctl import Client<br>
+                        results = client.search("insights")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2 class="cta-title">Ready to Transform Your Data Search?</h2>
+            <p class="cta-desc">Join developers who are revolutionizing how they search and understand their data</p>
+            <div class="btn-group">
+                <a href="https://github.com/gregorymulla/grepctl" class="btn btn-primary">Get Started on GitHub</a>
+                <a href="https://pypi.org/project/grepctl/" class="btn btn-secondary">Install from PyPI</a>
+            </div>
         </div>
     </section>
 
