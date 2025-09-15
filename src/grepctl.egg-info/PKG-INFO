@@ -459,12 +459,6 @@ grepctl fix embeddings    # Fixes dimension mismatches
 grepctl fix stuck         # Clears stuck processing
 ```
 
-## 📚 Documentation
-
-- **[grepctl Documentation](grepctl_README.md)** - Complete grepctl usage guide
-- **[Architecture Diagrams](visualize_architecture.py)** - System visualization
-- **[Lessons Learned](lessons_learned.md)** - Implementation insights
-- **[API Integration](api_integration_detail.png)** - Google Cloud API details
 
 ## 🔧 Troubleshooting
 
