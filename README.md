@@ -74,7 +74,7 @@ grepctl --help
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/grepctl.git
+git clone https://github.com/gregorymulla/grepctl.git
 cd grepctl
 
 # Install with uv (recommended)
