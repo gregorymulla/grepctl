@@ -121,13 +121,14 @@ def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_si
     table.add_column("Chunks", style="yellow")
     table.add_column("Errors", style="red")
 
-    for modality, counts in stats.items():
-        table.add_row(
-            modality,
-            str(counts.get('documents', 0)),
-            str(counts.get('chunks', 0)),
-            str(counts.get('errors', 0))
-        )
+    if 'modalities' in stats:
+        for modality, counts in stats['modalities'].items():
+            table.add_row(
+                modality,
+                str(counts.get('documents', 0)),
+                str(counts.get('chunks', 0)),
+                str(counts.get('errors', 0))
+            )
 
     console.print(table)
 

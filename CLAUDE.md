@@ -45,3 +45,4 @@ The package follows the standard Python src-layout:
 - `pyproject.toml` - Package configuration and dependencies
 - Entry point: `grepctl:main` (configured in pyproject.toml)
 - this repo is managed with uv. always use uv add. do not use pip install.
+- when you push the package to pypi, make sure to bum the version. also credentials are in .env

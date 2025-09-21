@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: grepctl
-Version: 0.1.1
+Version: 0.2.1
 Summary: One-command orchestration for multimodal semantic search in BigQuery
 Author-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
 Maintainer-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
@@ -9,7 +9,6 @@ Project-URL: Homepage, https://github.com/gregorymulla/grepctl
 Project-URL: Documentation, https://github.com/gregorymulla/grepctl#readme
 Project-URL: Repository, https://github.com/gregorymulla/grepctl.git
 Project-URL: Issues, https://github.com/gregorymulla/grepctl/issues
-Project-URL: Changelog, https://github.com/gregorymulla/grepctl/blob/main/CHANGELOG.md
 Keywords: bigquery,semantic-search,vector-search,multimodal,google-cloud,machine-learning,embeddings,gcs,vertex-ai,document-search
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
@@ -68,7 +67,7 @@ Requires-Dist: aiofiles>=23.2.1; extra == "server"
 Dynamic: license-file
 
 <div align="center">
-  <img src="images/grepctl_logo.png" alt="grepctl logo" width="200">
+  <img src="https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/grepctl_logo.png" alt="grepctl logo" width="200">
 
   # grepctl - BigQuery Semantic Search Orchestrator
 
@@ -119,7 +118,7 @@ All searchable through semantic understanding, not just keywords!
 ## 🏗️ Architecture Overview
 
 
-![Architecture](images/mmgrep.png)
+![Architecture](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/mmgrep.png)
 
 ## 🛠️ Installation & Setup
 
@@ -217,7 +216,7 @@ Then open your browser to `http://localhost:8000` to access:
 - 🔍 Relevance scoring and result highlighting
 - 🌐 Touch-optimized interface for mobile devices
 
-![Architecture](images/web-ui.png)
+![Web Interface](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/web-ui.png)
 
 
 ### Command Line Interface
@@ -240,7 +239,7 @@ grepctl --help
 grepctl search "bird"
 ```
 
-![Architecture](images/cli-search-result.png)
+![CLI Search Result](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/cli-search-result.png)
 
 
 ### SQL Interface

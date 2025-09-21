@@ -195,15 +195,7 @@ class TextExtractor:
             CURRENT_TIMESTAMP() AS created_at,
             NULL AS author,
             NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{self.config.text_model}`,
-                CONCAT(
-                    'Extract all text content from this document. ',
-                    'Preserve structure and formatting. ',
-                    'Output clean, readable text only.'
-                ),
-                data
-            ).ml_generate_text_result AS text_content,
+            SAFE_CONVERT_BYTES_TO_STRING(data) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,

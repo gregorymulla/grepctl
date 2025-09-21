@@ -1,6 +1,6 @@
 [project]
 name = "grepctl"
-version = "0.1.1"
+version = "0.2.1"
 description = "One-command orchestration for multimodal semantic search in BigQuery"
 readme = "README.md"
 authors = [
@@ -61,7 +61,6 @@ Homepage = "https://github.com/gregorymulla/grepctl"
 Documentation = "https://github.com/gregorymulla/grepctl#readme"
 Repository = "https://github.com/gregorymulla/grepctl.git"
 Issues = "https://github.com/gregorymulla/grepctl/issues"
-Changelog = "https://github.com/gregorymulla/grepctl/blob/main/CHANGELOG.md"
 
 [project.scripts]
 grepctl = "grepctl:main"

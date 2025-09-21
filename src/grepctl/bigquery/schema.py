@@ -96,7 +96,7 @@ class SchemaManager:
 
         for modality, folder in modalities:
             table_name = f"obj_{modality}"
-            uri_pattern = f"gs://{self.config.gcs_bucket}/{self.config.gcs_prefix}/{folder}/**"
+            uri_pattern = f"gs://{self.config.gcs_bucket}/{self.config.gcs_prefix}/{folder}/*"
 
             query = f"""
             CREATE OR REPLACE EXTERNAL TABLE `{self.config.project_id}.{self.config.dataset_name}.{table_name}`

@@ -248,15 +248,7 @@ class QueryTemplates:
             CURRENT_TIMESTAMP() AS created_at,
             NULL AS author,
             NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                CONCAT(
-                    'Summarize this JSON data in natural language for search. ',
-                    'Include key fields, entities, and numbers. ',
-                    'Make it searchable and informative.'
-                ),
-                SAFE_CAST(data AS STRING)
-            ).ml_generate_text_result AS text_content,
+            SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,
@@ -287,15 +279,7 @@ class QueryTemplates:
             CURRENT_TIMESTAMP() AS created_at,
             NULL AS author,
             NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                CONCAT(
-                    'Summarize this CSV data in natural language for search. ',
-                    'Describe the columns, data types, and notable patterns. ',
-                    'Include specific values and statistics where relevant.'
-                ),
-                SAFE_CAST(data AS STRING)
-            ).ml_generate_text_result AS text_content,
+            SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,

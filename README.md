@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="images/grepctl_logo.png" alt="grepctl logo" width="200">
+  <img src="https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/grepctl_logo.png" alt="grepctl logo" width="200">
 
   # grepctl - BigQuery Semantic Search Orchestrator
 
@@ -50,7 +50,7 @@ All searchable through semantic understanding, not just keywords!
 ## 🏗️ Architecture Overview
 
 
-![Architecture](images/mmgrep.png)
+![Architecture](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/mmgrep.png)
 
 ## 🛠️ Installation & Setup
 
@@ -148,7 +148,7 @@ Then open your browser to `http://localhost:8000` to access:
 - 🔍 Relevance scoring and result highlighting
 - 🌐 Touch-optimized interface for mobile devices
 
-![Architecture](images/web-ui.png)
+![Web Interface](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/web-ui.png)
 
 
 ### Command Line Interface
@@ -171,7 +171,7 @@ grepctl --help
 grepctl search "bird"
 ```
 
-![Architecture](images/cli-search-result.png)
+![CLI Search Result](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/cli-search-result.png)
 
 
 ### SQL Interface
