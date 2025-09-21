@@ -149,8 +149,8 @@ def load_config(path: Optional[Path] = None) -> Config:
 
         # Try to load from default locations
         default_paths = [
-            Path.home() / '.bq-semgrep' / 'config.yaml',
-            Path.cwd() / '.bq-semgrep.yaml',
+            Path.home() / '.grepctl' / 'config.yaml',
+            Path.cwd() / '.grepctl.yaml',
             Path.cwd() / 'config.yaml'
         ]
 
@@ -161,13 +161,13 @@ def load_config(path: Optional[Path] = None) -> Config:
 
     # Override with environment variables
     env_mappings = {
-        'BQ_SEMGREP_PROJECT': 'project_id',
-        'BQ_SEMGREP_DATASET': 'dataset_name',
-        'BQ_SEMGREP_BUCKET': 'gcs_bucket',
-        'BQ_SEMGREP_CONNECTION': 'gcs_connection',
-        'BQ_SEMGREP_TEXT_MODEL': 'text_model',
-        'BQ_SEMGREP_EMBEDDING_MODEL': 'embedding_model',
-        'BQ_SEMGREP_LOCATION': 'location',
+        'GREPCTL_PROJECT': 'project_id',
+        'GREPCTL_DATASET': 'dataset_name',
+        'GREPCTL_BUCKET': 'gcs_bucket',
+        'GREPCTL_CONNECTION': 'gcs_connection',
+        'GREPCTL_TEXT_MODEL': 'text_model',
+        'GREPCTL_EMBEDDING_MODEL': 'embedding_model',
+        'GREPCTL_LOCATION': 'location',
     }
 
     for env_var, config_attr in env_mappings.items():

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`bq-semgrep` is a Python package managed by uv. The package is structured using the standard src-layout pattern.
+`grepctl` is a Python package managed by uv. The package is structured using the standard src-layout pattern.
 
 ## Development Environment
 
 - **Python Version**: 3.11 (specified in `.python-version`)
 - **Package Manager**: uv 0.8.3+
-- **Package Structure**: src-layout with package code in `src/bq_semgrep/`
+- **Package Structure**: src-layout with package code in `src/grepctl/`
 
 ## Common Commands
 
@@ -26,7 +26,7 @@ uv add <package>
 uv add --dev <package>
 
 # Run the package
-uv run bq-semgrep
+uv run grepctl
 ```
 
 ### Development
@@ -41,7 +41,7 @@ uv pip install -e .
 ## Project Structure
 
 The package follows the standard Python src-layout:
-- `src/bq_semgrep/` - Main package source code
+- `src/grepctl/` - Main package source code
 - `pyproject.toml` - Package configuration and dependencies
-- Entry point: `bq_semgrep:main` (configured in pyproject.toml)
+- Entry point: `grepctl:main` (configured in pyproject.toml)
 - this repo is managed with uv. always use uv add. do not use pip install.

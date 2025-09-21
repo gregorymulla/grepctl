@@ -209,7 +209,7 @@ def main():
     logger.info("="*70)
 
     if success_count > 0:
-        logger.info("\nNext: Run 'uv run bq-semgrep index --update' to regenerate embeddings")
+        logger.info("\nNext: Run 'uv run grepctl index --update' to regenerate embeddings")
 
 def use_simple_extraction():
     """Fallback to simple extraction using PyPDF2 or similar."""

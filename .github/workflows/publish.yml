@@ -31,7 +31,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/ --cov=bq_semgrep --cov-report=term-missing || true
+        pytest tests/ --cov=grepctl --cov-report=term-missing || true
 
   build:
     needs: test
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/bq-semgrep
+      url: https://test.pypi.org/p/grepctl
 
     steps:
     - name: Download artifacts
@@ -89,7 +89,7 @@ jobs:
     if: github.event_name == 'release'
     environment:
       name: pypi
-      url: https://pypi.org/p/bq-semgrep
+      url: https://pypi.org/p/grepctl
 
     steps:
     - name: Download artifacts

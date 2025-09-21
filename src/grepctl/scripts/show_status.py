@@ -72,7 +72,7 @@ def get_status():
 
     # Print header
     print("\n" + "="*75)
-    print(" "*20 + "🚀 BQ-SEMGREP STATUS REPORT 🚀")
+    print(" "*20 + "🚀 GREPCTL STATUS REPORT 🚀")
     print("="*75)
     print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
@@ -224,7 +224,7 @@ def get_status():
     docs_without_embeddings = total_docs - total_embedded
     if docs_without_embeddings > 0:
         print(f"  1. Generate embeddings for {docs_without_embeddings} documents:")
-        print("     uv run bq-semgrep index --update")
+        print("     uv run grepctl index --update")
         has_pending = True
 
     # Check for incomplete processing
@@ -243,13 +243,13 @@ def get_status():
     if not has_pending:
         print("  ✅ All documents are indexed and ready for search!")
         print("\n  Try searching:")
-        print("     uv run bq-semgrep search 'your query here'")
+        print("     uv run grepctl search 'your query here'")
 
     # Print command reference
     print("\n📚 Command Reference:")
-    print("  Search:  uv run bq-semgrep search 'query'")
+    print("  Search:  uv run grepctl search 'query'")
     print("  Status:  uv run python show_status.py")
-    print("  Index:   uv run bq-semgrep index --update")
+    print("  Index:   uv run grepctl index --update")
     print()
     print("  Ingest Commands by Type:")
     print("    • JSON/CSV:  uv run python ingest_json_csv_fixed.py")

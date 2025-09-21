@@ -1,5 +1,5 @@
 # BigQuery Semantic Grep Configuration
-# Copy this file to ~/.bq-semgrep/config.yaml and update with your settings
+# Copy this file to ~/.grepctl/config.yaml and update with your settings
 
 # BigQuery settings
 project_id: "your-project-id"

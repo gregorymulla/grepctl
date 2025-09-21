@@ -12,8 +12,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/bq-semgrep.git
-cd bq-semgrep
+git clone https://github.com/yourusername/grepctl.git
+cd grepctl
 
 # Install with uv
 uv sync
@@ -35,7 +35,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 
 ### Configuration File
 
-Create a configuration file at `~/.bq-semgrep/config.yaml`:
+Create a configuration file at `~/.grepctl/config.yaml`:
 
 ```yaml
 project_id: "your-project-id"
@@ -51,10 +51,10 @@ gcs_prefix: "multimodal-dataset"
 
 ```bash
 # Create dataset, tables, and functions
-bq-semgrep setup --connection "your-gcs-connection"
+grepctl setup --connection "your-gcs-connection"
 
 # Check setup status
-bq-semgrep status
+grepctl status
 ```
 
 ### 2. Create External Tables for GCS Access
@@ -76,17 +76,17 @@ The setup command automatically creates external tables for each modality:
 
 ```bash
 # Ingest all data types from GCS
-bq-semgrep ingest --bucket gcm-data-lake --dataset mmgrep
+grepctl ingest --bucket gcm-data-lake --dataset mmgrep
 
 # Ingest specific modalities only
-bq-semgrep ingest --bucket gcm-data-lake -m pdf -m images -m audio
+grepctl ingest --bucket gcm-data-lake -m pdf -m images -m audio
 ```
 
 ### Ingestion Options
 
 ```bash
 # Custom chunking parameters
-bq-semgrep ingest \
+grepctl ingest \
     --bucket gcm-data-lake \
     --chunk-size 1000 \
     --chunk-overlap 200 \
@@ -99,32 +99,32 @@ bq-semgrep ingest \
 
 ```bash
 # Simple semantic search
-bq-semgrep search "invoice processing errors"
+grepctl search "invoice processing errors"
 
 # Get more results
-bq-semgrep search "customer churn analysis" --top-k 50
+grepctl search "customer churn analysis" --top-k 50
 ```
 
 ### Advanced Search
 
 ```bash
 # Filter by source types
-bq-semgrep search "onboarding issues" \
+grepctl search "onboarding issues" \
     --sources pdf screenshot recording \
     --top-k 20
 
 # Add regex filter
-bq-semgrep search "energy crisis" \
+grepctl search "energy crisis" \
     --regex "blackout|outage|load.?shedding" \
     --sources pdf
 
 # Date range filter
-bq-semgrep search "quarterly report" \
+grepctl search "quarterly report" \
     --start-date 2024-01-01 \
     --end-date 2024-12-31
 
 # Enable LLM reranking for better precision
-bq-semgrep search "technical documentation API" \
+grepctl search "technical documentation API" \
     --rerank \
     --top-k 10
 ```
@@ -133,13 +133,13 @@ bq-semgrep search "technical documentation API" \
 
 ```bash
 # Default table output
-bq-semgrep search "query" --output table
+grepctl search "query" --output table
 
 # JSON output for processing
-bq-semgrep search "query" --output json > results.json
+grepctl search "query" --output json > results.json
 
 # CSV output for analysis
-bq-semgrep search "query" --output csv > results.csv
+grepctl search "query" --output csv > results.csv
 ```
 
 ## Management
@@ -148,17 +148,17 @@ bq-semgrep search "query" --output csv > results.csv
 
 ```bash
 # Rebuild vector index from scratch
-bq-semgrep index --rebuild
+grepctl index --rebuild
 
 # Update embeddings for new documents
-bq-semgrep index --update
+grepctl index --update
 ```
 
 ### System Status
 
 ```bash
 # Check system status
-bq-semgrep status
+grepctl status
 ```
 
 Output shows:
@@ -234,16 +234,16 @@ CALL `your-project.mmgrep.semantic_grep`(
 
 2. **Dataset Not Found**
    ```bash
-   bq-semgrep setup
+   grepctl setup
    ```
 
 3. **No External Tables**
    ```bash
-   bq-semgrep setup --connection "your-gcs-connection"
+   grepctl setup --connection "your-gcs-connection"
    ```
 
 4. **Slow Search**
-   - Rebuild vector index: `bq-semgrep index --rebuild`
+   - Rebuild vector index: `grepctl index --rebuild`
    - Reduce rerank candidates
    - Use source filters to narrow search
 
@@ -253,37 +253,37 @@ CALL `your-project.mmgrep.semantic_grep`(
 
 ```bash
 # 1. Setup BigQuery resources
-bq-semgrep setup
+grepctl setup
 
 # 2. Ingest all data
-bq-semgrep ingest --bucket gcm-data-lake
+grepctl ingest --bucket gcm-data-lake
 
 # 3. Build vector index
-bq-semgrep index --rebuild
+grepctl index --rebuild
 
 # 4. Test search
-bq-semgrep search "test query"
+grepctl search "test query"
 ```
 
 ### Daily Update Workflow
 
 ```bash
 # 1. Ingest new data
-bq-semgrep ingest --bucket gcm-data-lake
+grepctl ingest --bucket gcm-data-lake
 
 # 2. Update embeddings
-bq-semgrep index --update
+grepctl index --update
 
 # 3. Check status
-bq-semgrep status
+grepctl status
 ```
 
 ## API Usage
 
 ```python
-from bq_semgrep.config import Config
-from bq_semgrep.bigquery.connection import BigQueryClient
-from bq_semgrep.search.vector_search import SemanticSearch
+from grepctl.config import Config
+from grepctl.bigquery.connection import BigQueryClient
+from grepctl.search.vector_search import SemanticSearch
 
 # Initialize
 config = Config()

@@ -5,11 +5,11 @@ Summary: One-command orchestration for multimodal semantic search in BigQuery
 Author-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
 Maintainer-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
 License: MIT
-Project-URL: Homepage, https://github.com/yourusername/grepctl
-Project-URL: Documentation, https://github.com/yourusername/grepctl#readme
-Project-URL: Repository, https://github.com/yourusername/grepctl.git
-Project-URL: Issues, https://github.com/yourusername/grepctl/issues
-Project-URL: Changelog, https://github.com/yourusername/grepctl/blob/main/CHANGELOG.md
+Project-URL: Homepage, https://github.com/gregorymulla/grepctl
+Project-URL: Documentation, https://github.com/gregorymulla/grepctl#readme
+Project-URL: Repository, https://github.com/gregorymulla/grepctl.git
+Project-URL: Issues, https://github.com/gregorymulla/grepctl/issues
+Project-URL: Changelog, https://github.com/gregorymulla/grepctl/blob/main/CHANGELOG.md
 Keywords: bigquery,semantic-search,vector-search,multimodal,google-cloud,machine-learning,embeddings,gcs,vertex-ai,document-search
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
@@ -67,11 +67,15 @@ Requires-Dist: python-multipart>=0.0.6; extra == "server"
 Requires-Dist: aiofiles>=23.2.1; extra == "server"
 Dynamic: license-file
 
-# grepctl - BigQuery Semantic Search Orchestrator
+<div align="center">
+  <img src="images/grepctl_logo.png" alt="grepctl logo" width="200">
 
-[![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  # grepctl - BigQuery Semantic Search Orchestrator
+
+  [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
+  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
 
 🚀 **One-command multimodal semantic search across your entire data lake using BigQuery ML and Google Cloud AI.**
 
@@ -114,44 +118,8 @@ All searchable through semantic understanding, not just keywords!
 
 ## 🏗️ Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     GCS DATA LAKE                           │
-│                    (Your Documents)                         │
-│  📄 Text  📑 PDF  🖼️ Images  🎵 Audio  🎬 Video  📊 Data    │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                    ┌─────▼─────┐
-                    │  grepctl  │ ← One command orchestration
-                    └─────┬─────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        ▼                 ▼                 ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ Ingestion    │  │ Google APIs  │  │ Processing   │
-│ • 6 scripts  │  │ • Vision     │  │ • Extract    │
-│ • All types  │  │ • Speech     │  │ • Transform  │
-│              │  │ • Video      │  │ • Enrich     │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-        └─────────────────┼─────────────────┘
-                          ▼
-                ┌─────────────────────┐
-                │  BigQuery Dataset   │
-                │   search_corpus     │
-                └─────────┬───────────┘
-                          ▼
-                ┌─────────────────────┐
-                │   Vertex AI         │
-                │ text-embedding-004  │
-                │  768 dimensions     │
-                └─────────┬───────────┘
-                          ▼
-                ┌─────────────────────┐
-                │  Semantic Search    │
-                │   VECTOR_SEARCH     │
-                │  <1 second query    │
-                └─────────────────────┘
-```
+
+![Architecture](images/mmgrep.png)
 
 ## 🛠️ Installation & Setup
 
@@ -175,7 +143,7 @@ grepctl --help
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/grepctl.git
+git clone https://github.com/gregorymulla/grepctl.git
 cd grepctl
 
 # Install with uv (recommended)
@@ -249,6 +217,9 @@ Then open your browser to `http://localhost:8000` to access:
 - 🔍 Relevance scoring and result highlighting
 - 🌐 Touch-optimized interface for mobile devices
 
+![Architecture](images/web-ui.png)
+
+
 ### Command Line Interface
 
 ```bash
@@ -264,6 +235,13 @@ grepctl status
 # View all available commands
 grepctl --help
 ```
+
+```bash
+grepctl search "bird"
+```
+
+![Architecture](images/cli-search-result.png)
+
 
 ### SQL Interface
 
@@ -290,9 +268,9 @@ ORDER BY distance;
 ### Python API (When installed from source)
 
 ```python
-from bq_semgrep.search.vector_search import SemanticSearch
-from bq_semgrep.bigquery.connection import BigQueryClient
-from bq_semgrep.config import load_config
+from grepctl.search.vector_search import SemanticSearch
+from grepctl.bigquery.connection import BigQueryClient
+from grepctl.config import load_config
 
 # Load configuration
 config = load_config()

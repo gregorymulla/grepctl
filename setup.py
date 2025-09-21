@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for bq-semgrep package.
+Setup script for grepctl package.
 This file is optional but included for compatibility with older tools.
 The main configuration is in pyproject.toml.
 """

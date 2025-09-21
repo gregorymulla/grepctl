@@ -15,7 +15,7 @@ recursive-include docs *.md *.rst *.txt
 recursive-include examples *.py *.yaml *.json
 
 # Include package data
-recursive-include src/bq_semgrep *.py *.yaml *.json
+recursive-include src/grepctl *.py *.yaml *.json
 
 # Exclude unnecessary files
 global-exclude __pycache__

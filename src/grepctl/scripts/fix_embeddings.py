@@ -306,7 +306,7 @@ def main():
     if success:
         logger.info("\n🎉 All embedding issues resolved!")
         logger.info("You can now search across all documents:")
-        logger.info("  uv run bq-semgrep search 'your query'")
+        logger.info("  uv run grepctl search 'your query'")
     else:
         logger.info("\n⚠️  Some issues remain. Check the output above for details.")
         logger.info("You may need to run this script again after:")

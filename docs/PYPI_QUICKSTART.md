@@ -1,4 +1,4 @@
-# Quick Start: Publishing bq-semgrep to PyPI
+# Quick Start: Publishing grepctl to PyPI
 
 ## 🚀 Fast Track (5 minutes)
 
@@ -20,7 +20,7 @@ source test_env/bin/activate  # Windows: test_env\Scripts\activate
 
 # Install and test
 pip install dist/*.whl
-bq-semgrep --help
+grepctl --help
 grepctl --help
 
 # Cleanup
@@ -33,7 +33,7 @@ deactivate && rm -rf test_env
 python -m twine upload --repository testpypi dist/*
 
 # Test installation from TestPyPI
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ bq-semgrep
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ grepctl
 ```
 
 ### 5. Publish to PyPI
@@ -79,18 +79,18 @@ password = pypi-YOUR-API-TOKEN-HERE
 ## 📦 After Publishing
 
 Your package will be available at:
-- **PyPI Page**: https://pypi.org/project/bq-semgrep/
-- **Installation**: `pip install bq-semgrep`
+- **PyPI Page**: https://pypi.org/project/grepctl/
+- **Installation**: `pip install grepctl`
 
 ### Installation Options:
 ```bash
 # Basic
-pip install bq-semgrep
+pip install grepctl
 
 # With extras
-pip install bq-semgrep[multimedia]  # Image/video processing
-pip install bq-semgrep[dev]         # Development tools
-pip install bq-semgrep[research]    # Research datasets
+pip install grepctl[multimedia]  # Image/video processing
+pip install grepctl[dev]         # Development tools
+pip install grepctl[research]    # Research datasets
 ```
 
 ## 🆘 Troubleshooting

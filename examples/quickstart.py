@@ -16,11 +16,11 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.bq_semgrep.config import Config
-from src.bq_semgrep.bigquery.connection import BigQueryClient
-from src.bq_semgrep.bigquery.schema import SchemaManager
-from src.bq_semgrep.ingestion.base import IngestionPipeline
-from src.bq_semgrep.search.vector_search import SemanticSearch
+from src.grepctl.config import Config
+from src.grepctl.bigquery.connection import BigQueryClient
+from src.grepctl.bigquery.schema import SchemaManager
+from src.grepctl.ingestion.base import IngestionPipeline
+from src.grepctl.search.vector_search import SemanticSearch
 
 
 def main():
@@ -61,7 +61,7 @@ def main():
         print(f"   ✓ Dataset '{config.dataset_name}' exists")
     else:
         print(f"   ! Dataset '{config.dataset_name}' not found")
-        print("   Run 'bq-semgrep setup' to create the dataset and tables")
+        print("   Run 'grepctl setup' to create the dataset and tables")
         return 1
 
     # Get document statistics
@@ -102,9 +102,9 @@ def main():
     print("\n" + "=" * 50)
     print("Quick start complete!")
     print("\nNext steps:")
-    print("1. Run 'bq-semgrep setup' to create tables")
-    print("2. Run 'bq-semgrep ingest --bucket gcm-data-lake' to ingest data")
-    print("3. Run 'bq-semgrep search \"your query\"' to search")
+    print("1. Run 'grepctl setup' to create tables")
+    print("2. Run 'grepctl ingest --bucket gcm-data-lake' to ingest data")
+    print("3. Run 'grepctl search \"your query\"' to search")
 
     return 0
 

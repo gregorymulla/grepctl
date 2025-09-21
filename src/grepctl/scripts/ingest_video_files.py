@@ -312,8 +312,8 @@ def main():
 
     if processed_count > 0:
         logger.info("\nNext steps:")
-        logger.info("1. Generate embeddings: uv run bq-semgrep index --update")
-        logger.info("2. Test search: uv run bq-semgrep search 'video scenes objects'")
+        logger.info("1. Generate embeddings: uv run grepctl index --update")
+        logger.info("2. Test search: uv run grepctl search 'video scenes objects'")
 
 if __name__ == "__main__":
     main()

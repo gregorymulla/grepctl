@@ -1,1 +1,1 @@
-bq_semgrep
+grepctl

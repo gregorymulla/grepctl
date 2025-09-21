@@ -71,17 +71,17 @@ FROM ML.GENERATE_EMBEDDING(
 
 ### 1. Search Only Images
 ```bash
-uv run bq-semgrep search "stock photo" --sources screenshot --top-k 5
+uv run grepctl search "stock photo" --sources screenshot --top-k 5
 ```
 
 ### 2. Search for Visual Content
 ```bash
-uv run bq-semgrep search "visual content photography" --top-k 10
+uv run grepctl search "visual content photography" --top-k 10
 ```
 
 ### 3. Mixed Modality Search
 ```bash
-uv run bq-semgrep search "image picture photo" --top-k 10
+uv run grepctl search "image picture photo" --top-k 10
 # Returns results from images, PDFs, markdown docs, and text files
 ```
 
@@ -156,7 +156,7 @@ ML.GENERATE_TEXT(
 ### Issue: Images not showing in search
 **Solution**: Ensure embeddings are generated:
 ```bash
-uv run bq-semgrep index --update
+uv run grepctl index --update
 ```
 
 ### Issue: Can't extract text from images
@@ -188,10 +188,10 @@ UPDATE \`semgrep-472018.mmgrep.search_corpus\`
 SET embedding = NULL
 WHERE modality = 'image'"
 
-uv run bq-semgrep index --update
+uv run grepctl index --update
 
 # Search images only
-uv run bq-semgrep search "your query" --sources screenshot --top-k 10
+uv run grepctl search "your query" --sources screenshot --top-k 10
 ```
 
 ## Integration with Other Modalities
@@ -200,7 +200,7 @@ The system seamlessly integrates images with other document types:
 
 ```bash
 # Search across all modalities
-uv run bq-semgrep search "content" --top-k 20
+uv run grepctl search "content" --top-k 20
 
 # Returns mixed results:
 # - Images (stock photos)

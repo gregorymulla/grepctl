@@ -48,12 +48,12 @@ REQUIRED_APIS = [
 MODALITIES = {
     'text': {'extensions': ['.txt', '.log'], 'script': None},
     'markdown': {'extensions': ['.md', '.markdown'], 'script': None},
-    'pdf': {'extensions': ['.pdf'], 'script': 'src/bq_semgrep/scripts/extract_all_pdfs_hybrid.py'},
+    'pdf': {'extensions': ['.pdf'], 'script': 'src/grepctl/scripts/extract_all_pdfs_hybrid.py'},
     'images': {'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'], 'script': None},  # complete_vision_analysis.py moved to obsolete
-    'json': {'extensions': ['.json', '.jsonl'], 'script': 'src/bq_semgrep/scripts/ingest_json_csv_fixed.py'},
-    'csv': {'extensions': ['.csv', '.tsv'], 'script': 'src/bq_semgrep/scripts/ingest_json_csv_fixed.py'},
-    'audio': {'extensions': ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac'], 'script': 'src/bq_semgrep/scripts/ingest_audio_files.py'},
-    'video': {'extensions': ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv'], 'script': 'src/bq_semgrep/scripts/ingest_video_files.py'},
+    'json': {'extensions': ['.json', '.jsonl'], 'script': 'src/grepctl/scripts/ingest_json_csv_fixed.py'},
+    'csv': {'extensions': ['.csv', '.tsv'], 'script': 'src/grepctl/scripts/ingest_json_csv_fixed.py'},
+    'audio': {'extensions': ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac'], 'script': 'src/grepctl/scripts/ingest_audio_files.py'},
+    'video': {'extensions': ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv'], 'script': 'src/grepctl/scripts/ingest_video_files.py'},
 }
 
 
@@ -205,8 +205,8 @@ def init_all(bucket, project, dataset, auto_ingest):
 
         # Create tables
         task = progress.add_task("Creating tables and models...", total=1)
-        if Path('src/bq_semgrep/scripts/setup_mmgrep.py').exists():
-            ctl.run_python_script('src/bq_semgrep/scripts/setup_mmgrep.py')
+        if Path('src/grepctl/scripts/setup_mmgrep.py').exists():
+            ctl.run_python_script('src/grepctl/scripts/setup_mmgrep.py')
         progress.advance(task)
 
         # Auto-ingest if requested
@@ -215,8 +215,8 @@ def init_all(bucket, project, dataset, auto_ingest):
             for modality in MODALITIES:
                 console.print(f"[cyan]Processing {modality}...[/cyan]")
                 if modality in ['text', 'markdown']:
-                    # Use bq-semgrep ingest for text/markdown
-                    cmd = ['uv', 'run', 'bq-semgrep', 'ingest', '-b', bucket, '-m', modality]
+                    # Use grepctl ingest for text/markdown
+                    cmd = ['uv', 'run', 'grepctl', 'ingest', '-b', bucket, '-m', modality]
                     ctl.run_command(cmd, check=False)
                 elif MODALITIES[modality]['script']:
                     ctl.run_python_script(MODALITIES[modality]['script'])
@@ -224,7 +224,7 @@ def init_all(bucket, project, dataset, auto_ingest):
 
             # Generate embeddings
             console.print("[cyan]Generating embeddings...[/cyan]")
-            ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
+            ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py')
 
     console.print("[bold green]✅ System initialization complete![/bold green]")
     console.print("\n[cyan]Next steps:[/cyan]")
@@ -270,8 +270,8 @@ def init_dataset():
         return
 
     # Run setup script if available
-    if Path('src/bq_semgrep/scripts/setup_mmgrep.py').exists():
-        ctl.run_python_script('src/bq_semgrep/scripts/setup_mmgrep.py')
+    if Path('src/grepctl/scripts/setup_mmgrep.py').exists():
+        ctl.run_python_script('src/grepctl/scripts/setup_mmgrep.py')
     else:
         console.print("[yellow]setup_mmgrep.py not found, skipping table creation[/yellow]")
 
@@ -385,8 +385,8 @@ def ingest_all(bucket, resume):
             console.print(f"\n[cyan]Processing {modality}...[/cyan]")
 
             if modality in ['text', 'markdown']:
-                # Use bq-semgrep for text/markdown
-                cmd = ['uv', 'run', 'bq-semgrep', 'ingest', '-b', bucket, '-m', modality]
+                # Use grepctl for text/markdown
+                cmd = ['uv', 'run', 'grepctl', 'ingest', '-b', bucket, '-m', modality]
                 ctl.run_command(cmd, check=False)
             elif config['script']:
                 ctl.run_python_script(config['script'])
@@ -401,7 +401,7 @@ def ingest_all(bucket, resume):
 def ingest_pdf():
     """Ingest and process PDF files."""
     console.print("[cyan]Processing PDF files...[/cyan]")
-    if ctl.run_python_script('src/bq_semgrep/scripts/extract_all_pdfs_hybrid.py'):
+    if ctl.run_python_script('src/grepctl/scripts/extract_all_pdfs_hybrid.py'):
         console.print("[green]✓ PDF ingestion complete[/green]")
 
 
@@ -409,7 +409,7 @@ def ingest_pdf():
 def ingest_images():
     """Ingest and analyze images with Vision API."""
     console.print("[cyan]Processing images with Vision API...[/cyan]")
-    if ctl.run_python_script('src/bq_semgrep/scripts/complete_vision_analysis.py'):
+    if ctl.run_python_script('src/grepctl/scripts/complete_vision_analysis.py'):
         console.print("[green]✓ Image analysis complete[/green]")
 
 
@@ -417,7 +417,7 @@ def ingest_images():
 def ingest_audio():
     """Ingest and transcribe audio files."""
     console.print("[cyan]Processing audio files...[/cyan]")
-    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_audio_files.py'):
+    if ctl.run_python_script('src/grepctl/scripts/ingest_audio_files.py'):
         console.print("[green]✓ Audio transcription complete[/green]")
 
 
@@ -425,7 +425,7 @@ def ingest_audio():
 def ingest_video():
     """Ingest and analyze video files."""
     console.print("[cyan]Processing video files...[/cyan]")
-    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_video_files.py'):
+    if ctl.run_python_script('src/grepctl/scripts/ingest_video_files.py'):
         console.print("[green]✓ Video analysis complete[/green]")
 
 
@@ -433,7 +433,7 @@ def ingest_video():
 def ingest_json():
     """Ingest JSON and CSV files."""
     console.print("[cyan]Processing JSON/CSV files...[/cyan]")
-    if ctl.run_python_script('src/bq_semgrep/scripts/ingest_json_csv_fixed.py'):
+    if ctl.run_python_script('src/grepctl/scripts/ingest_json_csv_fixed.py'):
         console.print("[green]✓ JSON/CSV ingestion complete[/green]")
 
 
@@ -449,14 +449,14 @@ def index_rebuild():
     """Rebuild all embeddings from scratch."""
     console.print("[cyan]Rebuilding all embeddings...[/cyan]")
 
-    cmd = ['uv', 'run', 'bq-semgrep', 'index', '--rebuild']
+    cmd = ['uv', 'run', 'grepctl', 'index', '--rebuild']
     result = ctl.run_command(cmd, check=False)
 
     if result.returncode == 0:
         console.print("[green]✓ Index rebuilt successfully[/green]")
     else:
         console.print("[yellow]Index rebuild encountered issues, running fix...[/yellow]")
-        ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
+        ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py')
 
 
 @index.command('update')
@@ -465,7 +465,7 @@ def index_update():
     console.print("[cyan]Updating embeddings...[/cyan]")
 
     # Run fix_embeddings.py which handles all embedding updates
-    if ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py'):
+    if ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py'):
         console.print("[green]✓ Embeddings updated successfully[/green]")
 
 
@@ -521,7 +521,7 @@ def fix_embeddings():
     """Fix dimension mismatches and empty arrays."""
     console.print("[cyan]Fixing embedding issues...[/cyan]")
 
-    if ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py'):
+    if ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py'):
         console.print("[green]✓ Embedding issues resolved[/green]")
 
 
@@ -548,7 +548,7 @@ def fix_stuck(modality):
         console.print(f"[green]✓ Reset {job.num_dml_affected_rows} stuck embeddings[/green]")
 
     # Re-run fix script
-    ctl.run_python_script('src/bq_semgrep/scripts/fix_embeddings.py')
+    ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py')
 
 
 @fix.command('validate')
@@ -597,8 +597,8 @@ def status():
     console.print(Panel.fit("📊 [bold cyan]System Status[/bold cyan]", border_style="cyan"))
 
     # Run show_status.py if available
-    if Path('src/bq_semgrep/scripts/show_status.py').exists():
-        ctl.run_python_script('src/bq_semgrep/scripts/show_status.py')
+    if Path('src/grepctl/scripts/show_status.py').exists():
+        ctl.run_python_script('src/grepctl/scripts/show_status.py')
     else:
         # Fallback to basic status
         client = ctl.get_bq_client()
@@ -635,8 +635,8 @@ def status():
 def search(query, top_k, modality, output):
     """Search across all indexed documents."""
 
-    # Use bq-semgrep search command
-    cmd = ['uv', 'run', 'bq-semgrep', 'search', query, '-k', str(top_k), '-o', output]
+    # Use grepctl search command
+    cmd = ['uv', 'run', 'grepctl', 'search', query, '-k', str(top_k), '-o', output]
 
     if modality:
         for m in modality:
@@ -680,7 +680,7 @@ def serve(host, port, reload, theme_config, workers):
 
         # Run the server
         uvicorn.run(
-            "bq_semgrep.api.server:app",
+            "grepctl.api.server:app",
             host=host,
             port=port,
             reload=reload,

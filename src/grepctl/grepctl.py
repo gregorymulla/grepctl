@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-grepctl CLI module - can be imported from bq_semgrep package.
+grepctl CLI module - can be imported from grepctl package.
 This is a wrapper to make grepctl available as part of the package.
 """
 

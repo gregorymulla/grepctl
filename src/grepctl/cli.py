@@ -25,7 +25,7 @@ console = Console()
 def cli(ctx, config):
     """BigQuery Semantic Grep - SQL-native semantic search across heterogeneous data."""
     ctx.ensure_object(dict)
-    config_path = Path(config) if config else Path.home() / '.bq-semgrep' / 'config.yaml'
+    config_path = Path(config) if config else Path.home() / '.grepctl' / 'config.yaml'
     ctx.obj['config'] = load_config(config_path)
     ctx.obj['client'] = BigQueryClient(ctx.obj['config'])
 

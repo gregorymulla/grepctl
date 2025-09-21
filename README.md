@@ -199,9 +199,9 @@ ORDER BY distance;
 ### Python API (When installed from source)
 
 ```python
-from bq_semgrep.search.vector_search import SemanticSearch
-from bq_semgrep.bigquery.connection import BigQueryClient
-from bq_semgrep.config import load_config
+from grepctl.search.vector_search import SemanticSearch
+from grepctl.bigquery.connection import BigQueryClient
+from grepctl.config import load_config
 
 # Load configuration
 config = load_config()

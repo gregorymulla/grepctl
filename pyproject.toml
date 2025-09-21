@@ -57,11 +57,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/grepctl"
-Documentation = "https://github.com/yourusername/grepctl#readme"
-Repository = "https://github.com/yourusername/grepctl.git"
-Issues = "https://github.com/yourusername/grepctl/issues"
-Changelog = "https://github.com/yourusername/grepctl/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/gregorymulla/grepctl"
+Documentation = "https://github.com/gregorymulla/grepctl#readme"
+Repository = "https://github.com/gregorymulla/grepctl.git"
+Issues = "https://github.com/gregorymulla/grepctl/issues"
+Changelog = "https://github.com/gregorymulla/grepctl/blob/main/CHANGELOG.md"
 
 [project.scripts]
 grepctl = "grepctl:main"

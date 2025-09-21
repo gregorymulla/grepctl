@@ -69,17 +69,17 @@ FROM ML.GENERATE_EMBEDDING(
 
 ### 1. Search Only PDFs
 ```bash
-uv run bq-semgrep search "machine learning" --sources pdf --top-k 5
+uv run grepctl search "machine learning" --sources pdf --top-k 5
 ```
 
 ### 2. Search Research Papers
 ```bash
-uv run bq-semgrep search "arxiv research paper" --top-k 10
+uv run grepctl search "arxiv research paper" --top-k 10
 ```
 
 ### 3. Mixed Modality Search
 ```bash
-uv run bq-semgrep search "deep learning algorithms" --top-k 10
+uv run grepctl search "deep learning algorithms" --top-k 10
 # Returns results from PDFs, markdown docs, and text files
 ```
 
@@ -139,7 +139,7 @@ ML.GENERATE_TEXT(
 ### Issue: PDFs not showing in search
 **Solution**: Ensure embeddings are generated:
 ```bash
-uv run bq-semgrep index --update
+uv run grepctl index --update
 ```
 
 ### Issue: Can't extract full text from PDFs
@@ -164,10 +164,10 @@ UPDATE \`semgrep-472018.mmgrep.search_corpus\`
 SET embedding = NULL
 WHERE modality = 'pdf'"
 
-uv run bq-semgrep index --update
+uv run grepctl index --update
 
 # Search PDFs only
-uv run bq-semgrep search "your query" --sources pdf --top-k 10
+uv run grepctl search "your query" --sources pdf --top-k 10
 ```
 
 ## Summary

@@ -226,8 +226,8 @@ def main():
 
     if processed_count > 0:
         logger.info("\nNext steps:")
-        logger.info("1. Generate embeddings: uv run bq-semgrep index --update")
-        logger.info("2. Test search: uv run bq-semgrep search 'audio speech transcription'")
+        logger.info("1. Generate embeddings: uv run grepctl index --update")
+        logger.info("2. Test search: uv run grepctl search 'audio speech transcription'")
 
 if __name__ == "__main__":
     main()

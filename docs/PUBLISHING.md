@@ -1,6 +1,6 @@
-# Publishing bq-semgrep to PyPI
+# Publishing grepctl to PyPI
 
-This guide explains how to build and publish the bq-semgrep package to PyPI.
+This guide explains how to build and publish the grepctl package to PyPI.
 
 ## Prerequisites
 
@@ -56,17 +56,17 @@ python -m build
 ```
 
 This creates:
-- `dist/bq-semgrep-0.1.0.tar.gz` (source distribution)
-- `dist/bq_semgrep-0.1.0-py3-none-any.whl` (wheel distribution)
+- `dist/grepctl-0.1.0.tar.gz` (source distribution)
+- `dist/grepctl-0.1.0-py3-none-any.whl` (wheel distribution)
 
 ### 3. Verify Package Contents
 
 ```bash
 # Check the tarball contents
-tar -tzf dist/bq-semgrep-0.1.0.tar.gz | head -20
+tar -tzf dist/grepctl-0.1.0.tar.gz | head -20
 
 # Check wheel contents
-unzip -l dist/bq_semgrep-0.1.0-py3-none-any.whl | head -20
+unzip -l dist/grepctl-0.1.0-py3-none-any.whl | head -20
 ```
 
 ## Testing (Recommended)
@@ -78,10 +78,9 @@ Create a virtual environment and test installation:
 ```bash
 python -m venv test_env
 source test_env/bin/activate  # On Windows: test_env\Scripts\activate
-pip install dist/bq_semgrep-0.1.0-py3-none-any.whl
+pip install dist/grepctl-0.1.0-py3-none-any.whl
 
 # Test the CLI
-bq-semgrep --help
 grepctl --help
 
 # Cleanup
@@ -98,7 +97,7 @@ python -m twine upload --repository testpypi dist/*
 ### 3. Install from Test PyPI
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ bq-semgrep
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ grepctl
 ```
 
 ## Publishing to PyPI
@@ -111,12 +110,12 @@ python -m twine upload dist/*
 
 ### 2. Verify Upload
 
-Visit your package at: https://pypi.org/project/bq-semgrep/
+Visit your package at: https://pypi.org/project/grepctl/
 
 ### 3. Install from PyPI
 
 ```bash
-pip install bq-semgrep
+pip install grepctl
 ```
 
 ## Post-Publication
@@ -127,28 +126,28 @@ Users can install the package using:
 
 ```bash
 # Basic installation
-pip install bq-semgrep
+pip install grepctl
 
 # With multimedia support
-pip install bq-semgrep[multimedia]
+pip install grepctl[multimedia]
 
 # With development tools
-pip install bq-semgrep[dev]
+pip install grepctl[dev]
 
 # With research extras
-pip install bq-semgrep[research]
+pip install grepctl[research]
 
 # All extras
-pip install bq-semgrep[multimedia,dev,research]
+pip install grepctl[multimedia,dev,research]
 ```
 
 ### Usage After Installation
 
 ```bash
 # Main CLI
-bq-semgrep --help
-bq-semgrep search "your query"
-bq-semgrep ingest --bucket your-bucket
+grepctl --help
+grepctl search "your query"
+grepctl ingest --bucket your-bucket
 
 # Management tool
 grepctl --help

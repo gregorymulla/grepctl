@@ -243,7 +243,7 @@ def main():
     logger.info(f"  - Failed: {len(pdf_uris) - success_count}")
 
     if success_count > 0:
-        logger.info("\nNext: Run 'uv run bq-semgrep index --update' to regenerate embeddings")
+        logger.info("\nNext: Run 'uv run grepctl index --update' to regenerate embeddings")
 
 if __name__ == "__main__":
     main()

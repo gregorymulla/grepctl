@@ -301,7 +301,7 @@ grepctl index update
 ## Related Tools
 
 grepctl integrates with:
-- `bq-semgrep` - Core search functionality
+- `grepctl` - Core search functionality
 - `fix_embeddings.py` - Embedding repair utility
 - `show_status.py` - Status display
 - Various ingestion scripts for each modality

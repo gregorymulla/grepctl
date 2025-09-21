@@ -168,8 +168,8 @@ grepctl requires minimal setup:
 
 ```bash
 # Clone repository
-git clone https://github.com/org/bq-semgrep.git
-cd bq-semgrep
+git clone https://github.com/org/grepctl.git
+cd grepctl
 
 # Install dependencies with uv
 uv sync
@@ -301,7 +301,7 @@ Future enhancements for grepctl include:
 
 grepctl demonstrates that complex cloud infrastructure can be abstracted behind simple, powerful interfaces. By automating the deployment and management of multimodal semantic search systems, grepctl reduces operational complexity while maintaining flexibility for advanced users. The system's ability to handle common errors automatically, combined with its one-command deployment, makes enterprise-grade semantic search accessible to a broader audience.
 
-The open-source implementation is available at https://github.com/org/bq-semgrep, with comprehensive documentation and examples. Our evaluation shows that grepctl successfully orchestrates a production-ready system processing hundreds of documents across eight modalities with minimal human intervention.
+The open-source implementation is available at https://github.com/org/grepctl, with comprehensive documentation and examples. Our evaluation shows that grepctl successfully orchestrates a production-ready system processing hundreds of documents across eight modalities with minimal human intervention.
 
 ## REFERENCES
 

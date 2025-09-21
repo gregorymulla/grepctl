@@ -206,13 +206,13 @@ Setup Complete!
     echo "   ${BLUE}bq query --use_legacy_sql=false \"CREATE OR REPLACE MODEL ...\"${NC}"
     echo ""
     echo "2. Generate embeddings for documents:"
-    echo "   ${BLUE}uv run bq-semgrep index --update${NC}"
+    echo "   ${BLUE}uv run grepctl index --update${NC}"
     echo ""
     echo "3. Build vector index:"
-    echo "   ${BLUE}uv run bq-semgrep index --rebuild${NC}"
+    echo "   ${BLUE}uv run grepctl index --rebuild${NC}"
     echo ""
     echo "4. Test semantic search:"
-    echo "   ${BLUE}uv run bq-semgrep search \"your query\" --rerank${NC}"
+    echo "   ${BLUE}uv run grepctl search \"your query\" --rerank${NC}"
     echo ""
 
     if [ $MODELS_CREATED -eq 0 ]; then
