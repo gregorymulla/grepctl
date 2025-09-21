@@ -234,7 +234,7 @@ def insert_video_document(uri: str, text_content: str) -> bool:
     """Insert video document into BigQuery."""
 
     query = """
-    INSERT INTO `semgrep-472018.mmgrep.search_corpus` (uri, modality, text_content)
+    INSERT INTO `semgrep-472018.grepmm.search_corpus` (uri, modality, text_content)
     VALUES (@uri, @modality, @text_content)
     """
 
@@ -264,7 +264,7 @@ def main():
     # Check existing videos
     check_query = """
     SELECT COUNT(*) as count
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE modality = 'video'
     """
 

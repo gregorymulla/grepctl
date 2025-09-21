@@ -77,7 +77,7 @@ def search(ctx, query, top_k, sources, rerank, regex, start_date, end_date, outp
 
 @cli.command()
 @click.option('--bucket', '-b', required=True, help='GCS bucket name')
-@click.option('--dataset', '-d', default='mmgrep', help='BigQuery dataset name')
+@click.option('--dataset', '-d', default='grepmm', help='BigQuery dataset name')
 @click.option('--modalities', '-m', multiple=True,
               type=click.Choice(['pdf', 'images', 'audio', 'video', 'text', 'markdown', 'json', 'csv', 'documents']),
               help='Modalities to ingest')

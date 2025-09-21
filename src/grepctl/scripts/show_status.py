@@ -27,7 +27,7 @@ def get_status():
             WHEN modality IN ('json', 'csv') AND text_content IS NOT NULL THEN 1
             ELSE 0
         END) as full_analysis
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     GROUP BY modality
     ORDER BY
         CASE modality
@@ -48,7 +48,7 @@ def get_status():
         SUM(CASE WHEN uri LIKE '%.txt' THEN 1 ELSE 0 END) as text_count,
         SUM(CASE WHEN uri LIKE '%.md' THEN 1 ELSE 0 END) as markdown_count,
         COUNT(*) as total_text
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE modality = 'text'
     '''
 
@@ -58,7 +58,7 @@ def get_status():
         COUNT(*) as total_docs,
         SUM(CASE WHEN embedding IS NOT NULL AND ARRAY_LENGTH(embedding) > 0 THEN 1 ELSE 0 END) as total_embedded,
         SUM(CASE WHEN text_content IS NOT NULL THEN 1 ELSE 0 END) as total_searchable
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     '''
 
     text_results = list(bq.query(text_query))

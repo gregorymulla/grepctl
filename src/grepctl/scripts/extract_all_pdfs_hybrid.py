@@ -164,7 +164,7 @@ def update_pdf_in_bigquery(uri: str, text_content: str) -> bool:
     """Update PDF in BigQuery."""
 
     query = """
-    UPDATE `semgrep-472018.mmgrep.search_corpus`
+    UPDATE `semgrep-472018.grepmm.search_corpus`
     SET text_content = @text_content,
         embedding = NULL  -- Clear embedding to force regeneration
     WHERE uri = @uri
@@ -195,7 +195,7 @@ def main():
     # Get all PDF URIs
     query = """
     SELECT DISTINCT uri
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE modality = 'pdf'
     ORDER BY uri
     """

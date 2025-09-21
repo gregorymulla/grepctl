@@ -200,8 +200,7 @@ class TextExtractor:
             TO_JSON(STRUCT(
                 size,
                 updated AS last_modified,
-                generation,
-                metageneration
+                generation
             )) AS meta,
             NULL AS chunk_index,
             NULL AS chunk_start,

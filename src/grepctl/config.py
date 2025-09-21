@@ -15,7 +15,7 @@ class Config:
 
     # BigQuery settings
     project_id: str = "semgrep-472018"
-    dataset_name: str = "mmgrep"
+    dataset_name: str = "grepmm"
     location: str = "US"
 
     # GCS settings
@@ -24,8 +24,8 @@ class Config:
     gcs_connection: str = ""  # BigQuery connection name for GCS
 
     # Model configurations
-    text_model: str = "semgrep-472018.mmgrep.text_model"
-    embedding_model: str = "semgrep-472018.mmgrep.text_embedding_model"
+    text_model: str = "semgrep-472018.grepmm.text_model"
+    embedding_model: str = "semgrep-472018.grepmm.text_embedding_model"
 
     # Chunking parameters
     chunk_size: int = 1000

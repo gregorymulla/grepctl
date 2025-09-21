@@ -126,7 +126,7 @@ def process_csv_file(uri: str):
 def insert_document(uri: str, modality: str, text_content: str):
     """Insert a single document using SQL INSERT."""
     query = """
-    INSERT INTO `semgrep-472018.mmgrep.search_corpus` (uri, modality, text_content)
+    INSERT INTO `semgrep-472018.grepmm.search_corpus` (uri, modality, text_content)
     VALUES (@uri, @modality, @text_content)
     """
 
@@ -156,7 +156,7 @@ def main():
     # Check existing
     check_query = """
     SELECT modality, COUNT(*) as count
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE modality IN ('json', 'csv')
     GROUP BY modality
     """

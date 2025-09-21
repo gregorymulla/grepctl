@@ -345,7 +345,7 @@ class QueryTemplates:
             chunk_num AS chunk_index,
             chunk_start,
             LEAST(chunk_start + {max_chunk_size}, LENGTH(text_content)) AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM chunk_positions
         """
 

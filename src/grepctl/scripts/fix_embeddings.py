@@ -32,7 +32,7 @@ def diagnose_embeddings() -> Dict[str, Dict]:
         SUM(CASE WHEN ARRAY_LENGTH(embedding) = 0 THEN 1 ELSE 0 END) as empty_embeddings,
         SUM(CASE WHEN ARRAY_LENGTH(embedding) = 768 THEN 1 ELSE 0 END) as valid_embeddings,
         SUM(CASE WHEN ARRAY_LENGTH(embedding) > 0 AND ARRAY_LENGTH(embedding) != 768 THEN 1 ELSE 0 END) as wrong_dimension
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     GROUP BY modality
     ORDER BY modality
     """
@@ -73,7 +73,7 @@ def fix_empty_embeddings() -> int:
 
     # Set empty arrays to NULL
     fix_query = """
-    UPDATE `semgrep-472018.mmgrep.search_corpus`
+    UPDATE `semgrep-472018.grepmm.search_corpus`
     SET embedding = NULL
     WHERE ARRAY_LENGTH(embedding) = 0
     """
@@ -99,7 +99,7 @@ def fix_wrong_dimensions() -> int:
     # Check for wrong dimensions
     check_query = """
     SELECT modality, COUNT(*) as count
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE ARRAY_LENGTH(embedding) > 0 AND ARRAY_LENGTH(embedding) != 768
     GROUP BY modality
     """
@@ -113,7 +113,7 @@ def fix_wrong_dimensions() -> int:
 
         # Set wrong dimension embeddings to NULL
         fix_query = """
-        UPDATE `semgrep-472018.mmgrep.search_corpus`
+        UPDATE `semgrep-472018.grepmm.search_corpus`
         SET embedding = NULL
         WHERE ARRAY_LENGTH(embedding) > 0 AND ARRAY_LENGTH(embedding) != 768
         """
@@ -137,7 +137,7 @@ def generate_missing_embeddings(batch_size: int = 50) -> int:
     # Count documents needing embeddings
     count_query = """
     SELECT modality, COUNT(*) as count
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     WHERE text_content IS NOT NULL
     AND (embedding IS NULL OR ARRAY_LENGTH(embedding) = 0)
     GROUP BY modality
@@ -172,11 +172,11 @@ def generate_missing_embeddings(batch_size: int = 50) -> int:
             # Generate embeddings for a batch
             # Note: BigQuery UPDATE doesn't support LIMIT, so we use a subquery
             update_query = f"""
-            UPDATE `semgrep-472018.mmgrep.search_corpus` t
+            UPDATE `semgrep-472018.grepmm.search_corpus` t
             SET embedding = (
                 SELECT ml_generate_embedding_result
                 FROM ML.GENERATE_EMBEDDING(
-                    MODEL `semgrep-472018.mmgrep.text_embedding_model`,
+                    MODEL `semgrep-472018.grepmm.text_embedding_model`,
                     (SELECT text_content AS content),
                     STRUCT(TRUE AS flatten_json_output)
                 )
@@ -186,7 +186,7 @@ def generate_missing_embeddings(batch_size: int = 50) -> int:
             AND (embedding IS NULL OR ARRAY_LENGTH(embedding) = 0)
             AND uri IN (
                 SELECT uri
-                FROM `semgrep-472018.mmgrep.search_corpus`
+                FROM `semgrep-472018.grepmm.search_corpus`
                 WHERE modality = '{modality}'
                 AND text_content IS NOT NULL
                 AND (embedding IS NULL OR ARRAY_LENGTH(embedding) = 0)
@@ -234,7 +234,7 @@ def verify_embeddings() -> bool:
         SUM(CASE WHEN text_content IS NOT NULL AND embedding IS NULL THEN 1 ELSE 0 END) as missing_embeddings,
         SUM(CASE WHEN ARRAY_LENGTH(embedding) = 0 THEN 1 ELSE 0 END) as empty_embeddings,
         SUM(CASE WHEN ARRAY_LENGTH(embedding) > 0 AND ARRAY_LENGTH(embedding) != 768 THEN 1 ELSE 0 END) as wrong_dimension
-    FROM `semgrep-472018.mmgrep.search_corpus`
+    FROM `semgrep-472018.grepmm.search_corpus`
     """
 
     result = list(bq_client.query(verify_query))[0]
@@ -318,7 +318,7 @@ def main():
         SELECT modality,
                COUNT(*) as total,
                SUM(CASE WHEN text_content IS NOT NULL AND embedding IS NULL THEN 1 ELSE 0 END) as needs_embedding
-        FROM `semgrep-472018.mmgrep.search_corpus`
+        FROM `semgrep-472018.grepmm.search_corpus`
         WHERE text_content IS NOT NULL AND embedding IS NULL
         GROUP BY modality
         """
