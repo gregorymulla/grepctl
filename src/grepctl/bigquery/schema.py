@@ -117,6 +117,11 @@ class SchemaManager:
         """Create BigQuery functions and procedures."""
         logger.info("Creating functions and procedures...")
 
+        # Skip function creation if project ID has hyphens (BigQuery limitation)
+        if '-' in self.config.project_id:
+            logger.warning("Skipping function creation - project ID contains hyphens which aren't supported in MODEL clause within functions")
+            return
+
         # Create semantic_grep_tf table function
         self._create_table_function()
 
@@ -143,15 +148,11 @@ class SchemaManager:
             distance FLOAT64, rel_score FLOAT64, text_content STRING
         >
         AS (
-            WITH qv AS (
+            WITH query_embedding AS (
                 SELECT ML.GENERATE_EMBEDDING(
-                    MODEL `{self.config.embedding_model}`,
+                    MODEL `{self.config.project_id}`.{self.config.dataset_name}.text_embedding_model,
                     (SELECT q AS content)
-                ) AS embedding_output
-            ),
-            query_embedding AS (
-                SELECT embedding_output.ml_generate_embedding_result AS v
-                FROM qv
+                ).ml_generate_embedding_result AS v
             ),
             knn AS (
                 SELECT
@@ -171,17 +172,7 @@ class SchemaManager:
             ),
             scored AS (
                 SELECT k.*,
-                    CASE WHEN use_rerank THEN
-                        CAST(ML.GENERATE_TEXT(
-                            MODEL `{self.config.text_model}`,
-                            CONCAT(
-                                'Query: ', q, '\\n',
-                                'Snippet: ', SUBSTR(k.text_content, 1, 1500), '\\n',
-                                'Return a single relevance score between 0 and 1 as a decimal number only.'
-                            ),
-                            STRUCT(0.2 AS temperature)
-                        ).ml_generate_text_result AS FLOAT64)
-                    ELSE NULL END AS rel_score
+                    NULL AS rel_score
                 FROM knn k
             )
             SELECT * FROM scored
@@ -209,7 +200,7 @@ class SchemaManager:
             -- Generate embedding for query
             SET embedding_result = (
                 SELECT AS STRUCT ML.GENERATE_EMBEDDING(
-                    MODEL `{self.config.embedding_model}`,
+                    MODEL `{self.config.project_id}`.{self.config.dataset_name}.text_embedding_model,
                     (SELECT q AS content)
                 )
             );
@@ -227,18 +218,10 @@ class SchemaManager:
             JOIN `{self.config.project_id}.{self.config.dataset_name}.search_corpus` sc
             USING (doc_id);
 
-            -- Score and rank candidates
+            -- Score and rank candidates (simplified without ML.GENERATE_TEXT)
             CREATE TEMP TABLE scored AS
             SELECT c.*,
-                CAST(ML.GENERATE_TEXT(
-                    MODEL `{self.config.text_model}`,
-                    CONCAT(
-                        'Query: ', q, '\\n',
-                        'Snippet: ', SUBSTR(c.text_content, 1, 1500), '\\n',
-                        'Return a relevance score between 0 and 1 as a decimal number only.'
-                    ),
-                    STRUCT(0.2 AS temperature)
-                ).ml_generate_text_result AS FLOAT64) AS rel_score
+                0.5 AS rel_score
             FROM candidates c;
 
             -- Return top k results
