@@ -84,8 +84,10 @@ def search(ctx, query, top_k, sources, rerank, regex, start_date, end_date, outp
 @click.option('--chunk-size', default=1000, help='Chunk size for text splitting')
 @click.option('--chunk-overlap', default=200, help='Overlap between chunks')
 @click.option('--batch-size', default=100, help='Batch size for processing')
+@click.option('--no-video', is_flag=True, help='Skip video processing to save time and costs')
+@click.option('--no-audio', is_flag=True, help='Skip audio processing to save time and costs')
 @click.pass_context
-def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_size):
+def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_size, no_video, no_audio):
     """Ingest data from GCS into BigQuery for semantic search."""
     config = ctx.obj['config']
     client = ctx.obj['client']
@@ -99,6 +101,25 @@ def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_si
     pipeline = IngestionPipeline(client, config)
 
     modalities_list = list(modalities) if modalities else ['all']
+
+    # Filter out video/audio if flags are set
+    if no_video and 'video' in modalities_list:
+        modalities_list.remove('video')
+        console.print("[yellow]Skipping video processing (--no-video flag set)[/yellow]")
+    if no_audio and 'audio' in modalities_list:
+        modalities_list.remove('audio')
+        console.print("[yellow]Skipping audio processing (--no-audio flag set)[/yellow]")
+
+    # Handle 'all' with exclusions
+    if 'all' in modalities_list:
+        all_modalities = ['pdf', 'images', 'audio', 'video', 'text', 'markdown', 'json', 'csv', 'documents']
+        if no_video:
+            all_modalities.remove('video')
+            console.print("[yellow]Excluding video from 'all' modalities (--no-video flag set)[/yellow]")
+        if no_audio:
+            all_modalities.remove('audio')
+            console.print("[yellow]Excluding audio from 'all' modalities (--no-audio flag set)[/yellow]")
+        modalities_list = all_modalities
 
     with Progress(
         SpinnerColumn(),
