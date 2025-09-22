@@ -1,6 +1,6 @@
 [project]
 name = "grepctl"
-version = "0.3.0"
+version = "0.3.1"
 description = "One-command orchestration for multimodal semantic search in BigQuery"
 readme = "README.md"
 authors = [
@@ -21,7 +21,21 @@ keywords = [
     "embeddings",
     "gcs",
     "vertex-ai",
-    "document-search"
+    "document-search",
+    "rag",
+    "vector-database",
+    "retrieval-augmented-generation",
+    "llm-orchestration",
+    "multimodal-search",
+    "document-ai",
+    "vision-api",
+    "speech-to-text",
+    "video-intelligence",
+    "semantic-similarity",
+    "text-embeddings",
+    "hybrid-search",
+    "knowledge-base",
+    "data-lake"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

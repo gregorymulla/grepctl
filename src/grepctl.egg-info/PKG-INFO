@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: grepctl
-Version: 0.3.0
+Version: 0.3.1
 Summary: One-command orchestration for multimodal semantic search in BigQuery
 Author-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
 Maintainer-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
@@ -9,7 +9,7 @@ Project-URL: Homepage, https://github.com/gregorymulla/grepctl
 Project-URL: Documentation, https://github.com/gregorymulla/grepctl#readme
 Project-URL: Repository, https://github.com/gregorymulla/grepctl.git
 Project-URL: Issues, https://github.com/gregorymulla/grepctl/issues
-Keywords: bigquery,semantic-search,vector-search,multimodal,google-cloud,machine-learning,embeddings,gcs,vertex-ai,document-search
+Keywords: bigquery,semantic-search,vector-search,multimodal,google-cloud,machine-learning,embeddings,gcs,vertex-ai,document-search,rag,vector-database,retrieval-augmented-generation,llm-orchestration,multimodal-search,document-ai,vision-api,speech-to-text,video-intelligence,semantic-similarity,text-embeddings,hybrid-search,knowledge-base,data-lake
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
