@@ -524,12 +524,14 @@ def audio(ctx, setup, transcribe, batch_size, add_speakers, process_batch):
 @click.option('--setup', is_flag=True, help='Setup video processing tables')
 @click.option('--process', is_flag=True, help='Process video files from GCS')
 @click.option('--batch-size', default=5, help='Number of videos to process in each batch')
+@click.option('--mode', type=click.Choice(['minimal', 'efficient', 'full']),
+              default='efficient', help='Processing mode (minimal=cheapest, full=complete)')
 @click.option('--search', help='Search videos using text query')
 @click.option('--search-type', type=click.Choice(['transcript', 'ocr', 'visual', 'hybrid']),
               default='hybrid', help='Type of video search')
 @click.option('--top-k', '-k', default=10, help='Number of results to return')
 @click.pass_context
-def video(ctx, setup, process, batch_size, search, search_type, top_k):
+def video(ctx, setup, process, batch_size, mode, search, search_type, top_k):
     """Manage video ingestion with shot detection, transcription, and OCR."""
     config = ctx.obj['config']
     client = ctx.obj['client']
@@ -549,7 +551,14 @@ def video(ctx, setup, process, batch_size, search, search_type, top_k):
 
     if process:
         console.print(f"[yellow]Processing video files with batch size {batch_size}...[/yellow]")
-        console.print("[dim]Using Cloud Video Intelligence API for comprehensive analysis[/dim]")
+        console.print(f"[dim]Mode: {mode} - ", end="")
+
+        if mode == 'minimal':
+            console.print("Lowest cost, basic analysis only[/dim]")
+        elif mode == 'efficient':
+            console.print("Balanced cost/quality, sampled analysis[/dim]")
+        elif mode == 'full':
+            console.print("Complete analysis, highest cost[/dim]")
 
         with Progress(
             SpinnerColumn(),
@@ -558,7 +567,7 @@ def video(ctx, setup, process, batch_size, search, search_type, top_k):
         ) as progress:
             task = progress.add_task("Processing videos...", total=None)
 
-            stats = processor.process_video_files(batch_size=batch_size)
+            stats = processor.process_video_files(batch_size=batch_size, sample_mode=mode)
 
             progress.update(task, completed=True)
 
@@ -632,11 +641,16 @@ def video(ctx, setup, process, batch_size, search, search_type, top_k):
     if not (setup or process or search):
         console.print("[yellow]Please specify an action: --setup, --process, or --search[/yellow]")
         console.print("\nExamples:")
-        console.print("  grepctl video --setup                      # Setup video processing tables")
-        console.print("  grepctl video --process                    # Process all video files")
-        console.print("  grepctl video --process --batch-size 3     # Process in smaller batches")
-        console.print("  grepctl video --search 'meeting notes'     # Search video content")
-        console.print("  grepctl video --search 'logo' --search-type ocr  # Search on-screen text")
+        console.print("  grepctl video --setup                           # Setup video processing tables")
+        console.print("  grepctl video --process --mode minimal          # Cheapest processing (~$0.05/min)")
+        console.print("  grepctl video --process --mode efficient        # Balanced processing (~$0.15/min)")
+        console.print("  grepctl video --process --mode full             # Complete analysis (~$0.40/min)")
+        console.print("  grepctl video --search 'meeting notes'          # Search video content")
+        console.print("  grepctl video --search 'logo' --search-type ocr # Search on-screen text")
+        console.print("\n[dim]Processing modes:")
+        console.print("  minimal:   Shot detection + transcription (samples every 30s)")
+        console.print("  efficient: Shot detection + transcription (samples every 10s)")
+        console.print("  full:      All features including OCR + labels (no sampling)[/dim]")
 
 
 @cli.command()

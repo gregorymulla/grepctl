@@ -65,6 +65,9 @@ class VideoProcessor:
         self.batch_size = 10
         self.enable_ocr = False  # Disable OCR by default to save costs
         self.enable_labels = False  # Disable label detection by default
+        self.sample_rate = 0.1  # Sample 10% of frames (1 frame every 10 frames)
+        self.max_frames_per_video = 100  # Maximum frames to process per video
+        self.segment_sample_interval = 10  # Process one segment every N seconds
 
     def create_video_tables(self) -> None:
         """Create all necessary video processing tables."""
@@ -220,12 +223,77 @@ class VideoProcessor:
             logger.error(f"Failed to create video OCR text table: {e}")
             raise
 
-    def process_video_files(self, batch_size: Optional[int] = None) -> Dict[str, Any]:
-        """Process video files from GCS with comprehensive analysis."""
-        logger.info("Starting video file processing...")
+    def estimate_processing_cost(self, video_duration_minutes: float, mode: str = 'efficient') -> Dict[str, float]:
+        """
+        Estimate processing cost for video analysis.
+
+        Args:
+            video_duration_minutes: Video duration in minutes
+            mode: Processing mode
+
+        Returns:
+            Cost breakdown by feature
+        """
+        costs = {
+            'shot_detection': 0.10 * video_duration_minutes,
+            'speech_transcription': 0.048 * video_duration_minutes,
+            'text_detection': 0.0,
+            'label_detection': 0.0,
+            'total': 0.0
+        }
+
+        if mode == 'minimal':
+            # Minimal: shots + speech, heavy sampling
+            sampling_factor = 0.3  # Process ~30% due to sampling
+            costs['shot_detection'] *= sampling_factor
+            costs['speech_transcription'] *= sampling_factor
+
+        elif mode == 'efficient':
+            # Efficient: shots + speech, moderate sampling
+            sampling_factor = 0.5  # Process ~50% due to sampling
+            costs['shot_detection'] *= sampling_factor
+            costs['speech_transcription'] *= sampling_factor
+
+        elif mode == 'full':
+            # Full: everything, no sampling
+            costs['text_detection'] = 0.15 * video_duration_minutes
+            costs['label_detection'] = 0.10 * video_duration_minutes
+
+        costs['total'] = sum(v for k, v in costs.items() if k != 'total')
+        return costs
+
+    def process_video_files(self, batch_size: Optional[int] = None,
+                           sample_mode: str = 'efficient') -> Dict[str, Any]:
+        """
+        Process video files from GCS with comprehensive analysis.
+
+        Args:
+            batch_size: Number of videos to process at once
+            sample_mode: Processing mode - 'efficient' (sample), 'full' (all frames), 'minimal' (shots only)
+        """
+        logger.info(f"Starting video file processing in {sample_mode} mode...")
 
         if batch_size is None:
             batch_size = self.batch_size
+
+        # Configure settings based on mode
+        if sample_mode == 'minimal':
+            self.enable_ocr = False
+            self.enable_labels = False
+            self.segment_sample_interval = 30  # Sample every 30 seconds
+            logger.info("Minimal mode: Shot detection + basic transcription only")
+        elif sample_mode == 'efficient':
+            self.enable_ocr = False
+            self.enable_labels = False
+            self.segment_sample_interval = 10  # Sample every 10 seconds
+            logger.info("Efficient mode: Balanced processing with sampling")
+        elif sample_mode == 'full':
+            self.enable_ocr = True
+            self.enable_labels = True
+            self.segment_sample_interval = 0  # Process all segments
+            logger.info("Full mode: Complete analysis (higher cost)")
+        else:
+            logger.warning(f"Unknown mode {sample_mode}, using efficient mode")
 
         stats = {
             'start_time': datetime.now(),
@@ -346,7 +414,7 @@ class VideoProcessor:
 
         operations = {}
 
-        # Configure video context
+        # Configure video context with sampling
         video_context = videointelligence_v1.VideoContext(
             speech_transcription_config=videointelligence_v1.SpeechTranscriptionConfig(
                 language_code="en-US",
@@ -354,10 +422,19 @@ class VideoProcessor:
                 enable_word_confidence=True,
                 enable_speaker_diarization=True,
                 diarization_speaker_count=4,
+                max_alternatives=1,  # Only get best alternative to save processing
             ),
             text_detection_config=videointelligence_v1.TextDetectionConfig(
                 language_hints=["en"],
-            )
+                model="builtin/latest",  # Use latest model
+            ),
+            # Add segment configuration for sampling
+            segments=[
+                videointelligence_v1.VideoSegment(
+                    start_time_offset={'seconds': 0},
+                    end_time_offset={'seconds': 120}  # Process only first 2 minutes by default
+                )
+            ] if self.segment_sample_interval > 0 else None
         )
 
         # Shot detection
@@ -457,6 +534,23 @@ class VideoProcessor:
         """Process shot detection results into segments."""
         segments = []
 
+        # Apply sampling to reduce segments if interval is set
+        if self.segment_sample_interval > 0:
+            # Group shots by time intervals
+            sampled_shots = []
+            last_sample_time = -self.segment_sample_interval
+
+            for shot in shots:
+                start_time = shot.start_time_offset.total_seconds() if shot.start_time_offset else 0
+
+                # Take one shot per interval
+                if start_time >= last_sample_time + self.segment_sample_interval:
+                    sampled_shots.append(shot)
+                    last_sample_time = start_time
+
+            logger.info(f"Sampled {len(sampled_shots)} shots from {len(shots)} total (interval: {self.segment_sample_interval}s)")
+            shots = sampled_shots
+
         for i, shot in enumerate(shots):
             start_time = shot.start_time_offset.total_seconds() if shot.start_time_offset else 0
             end_time = shot.end_time_offset.total_seconds() if shot.end_time_offset else 0
@@ -466,31 +560,44 @@ class VideoProcessor:
             if duration < self.min_segment_duration:
                 continue
 
-            # Split very long segments
-            if duration > self.max_segment_duration:
-                num_splits = int(duration / self.max_segment_duration) + 1
-                split_duration = duration / num_splits
-
-                for j in range(num_splits):
-                    segment = VideoSegment(
-                        segment_id=f"{video_id}_shot_{i}_{j}",
-                        start_time=start_time + (j * split_duration),
-                        end_time=start_time + ((j + 1) * split_duration),
-                        duration=split_duration,
-                        shot_label=f"shot_{i}_part_{j}",
-                        confidence=0.95
-                    )
-                    segments.append(segment)
-            else:
+            # For sampled mode, don't split long segments
+            if self.segment_sample_interval > 0:
+                # Keep segments as-is when sampling
                 segment = VideoSegment(
                     segment_id=f"{video_id}_shot_{i}",
                     start_time=start_time,
-                    end_time=end_time,
-                    duration=duration,
+                    end_time=min(end_time, start_time + self.max_segment_duration),
+                    duration=min(duration, self.max_segment_duration),
                     shot_label=f"shot_{i}",
                     confidence=0.95
                 )
                 segments.append(segment)
+            else:
+                # Split very long segments only in full mode
+                if duration > self.max_segment_duration:
+                    num_splits = int(duration / self.max_segment_duration) + 1
+                    split_duration = duration / num_splits
+
+                    for j in range(num_splits):
+                        segment = VideoSegment(
+                            segment_id=f"{video_id}_shot_{i}_{j}",
+                            start_time=start_time + (j * split_duration),
+                            end_time=start_time + ((j + 1) * split_duration),
+                            duration=split_duration,
+                            shot_label=f"shot_{i}_part_{j}",
+                            confidence=0.95
+                        )
+                        segments.append(segment)
+                else:
+                    segment = VideoSegment(
+                        segment_id=f"{video_id}_shot_{i}",
+                        start_time=start_time,
+                        end_time=end_time,
+                        duration=duration,
+                        shot_label=f"shot_{i}",
+                        confidence=0.95
+                    )
+                    segments.append(segment)
 
         # Store segments in database
         self._store_segments(segments, video_id, video_uri)
