@@ -23,84 +23,45 @@ class TextExtractor:
         self.queries = QueryTemplates()
 
     def extract_pdf_text(self) -> int:
-        """Extract text from PDF files using ML.GENERATE_TEXT."""
-        logger.info("Extracting text from PDF files...")
-
-        query = self.queries.extract_text_from_pdf(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
-        )
-
-        try:
-            job = self.client.execute_query(query)
-            job.result()  # Wait for completion
-            num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Extracted text from {num_rows} PDF files")
-            return num_rows
-        except Exception as e:
-            logger.error(f"Failed to extract PDF text: {e}")
-            return 0
+        """Extract text from PDF files."""
+        # This method is deprecated - PDFs are now handled by PDFProcessor
+        logger.debug("PDF processing is now handled by PDFProcessor class")
+        return 0
 
     def extract_image_text(self) -> int:
-        """Perform OCR on images using ML.GENERATE_TEXT."""
-        logger.info("Performing OCR on images...")
-
-        query = self.queries.extract_text_from_images(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
-        )
-
-        try:
-            job = self.client.execute_query(query)
-            job.result()
-            num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Extracted text from {num_rows} images")
-            return num_rows
-        except Exception as e:
-            logger.error(f"Failed to extract image text: {e}")
-            return 0
+        """Perform OCR on images."""
+        # This method is deprecated - Images are now handled by ImageProcessor
+        logger.debug("Image processing is now handled by ImageProcessor class")
+        return 0
 
     def extract_audio_text(self) -> int:
-        """Transcribe audio files using ML.GENERATE_TEXT."""
-        logger.info("Transcribing audio files...")
+        """Transcribe audio files using AudioProcessor."""
+        logger.info("Processing audio files with Speech-to-Text API...")
 
-        query = self.queries.extract_text_from_audio(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
-        )
+        from .audio_processor import AudioProcessor
 
-        try:
-            job = self.client.execute_query(query)
-            job.result()
-            num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Transcribed {num_rows} audio files")
-            return num_rows
-        except Exception as e:
-            logger.error(f"Failed to transcribe audio: {e}")
-            return 0
+        audio_processor = AudioProcessor(self.client, self.config)
+
+        # Create audio metadata table if needed
+        audio_processor.create_audio_metadata_table()
+
+        # Process audio files
+        stats = audio_processor.process_audio_files(batch_size=10)
+
+        # Update search corpus
+        corpus_count = audio_processor.update_search_corpus()
+        logger.info(f"Added {corpus_count} audio documents to search corpus")
+
+        return stats.get('files_processed', 0)
 
     def extract_video_text(self) -> int:
-        """Transcribe video files using ML.GENERATE_TEXT."""
-        logger.info("Transcribing video files...")
-
-        query = self.queries.extract_text_from_video(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
-        )
-
-        try:
-            job = self.client.execute_query(query)
-            job.result()
-            num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Transcribed {num_rows} video files")
-            return num_rows
-        except Exception as e:
-            logger.error(f"Failed to transcribe video: {e}")
-            return 0
+        """Transcribe video files."""
+        logger.warning("Video transcription requires ML.GENERATE_TEXT which is not available.")
+        logger.info("Please use alternative methods:")
+        logger.info("  1. Pre-process videos using Video Intelligence API")
+        logger.info("  2. Use Cloud Functions with Video Intelligence API")
+        logger.info("  3. Extract transcripts before ingestion")
+        return 0
 
     def ingest_text_files(self) -> int:
         """Ingest plain text files directly."""
@@ -113,7 +74,8 @@ class TextExtractor:
 
         try:
             job = self.client.execute_query(query)
-            job.result()
+            logger.info("Query submitted, waiting for completion...")
+            job.result(timeout=300)  # 5 minute timeout
             num_rows = job.num_dml_affected_rows or 0
             logger.info(f"Ingested {num_rows} text files")
             return num_rows
@@ -132,7 +94,8 @@ class TextExtractor:
 
         try:
             job = self.client.execute_query(query)
-            job.result()
+            logger.info("Query submitted, waiting for completion...")
+            job.result(timeout=300)  # 5 minute timeout
             num_rows = job.num_dml_affected_rows or 0
             logger.info(f"Ingested {num_rows} markdown files")
             return num_rows
@@ -141,43 +104,93 @@ class TextExtractor:
             return 0
 
     def summarize_json_files(self) -> int:
-        """Summarize JSON files for searchability."""
-        logger.info("Summarizing JSON files...")
+        """Process JSON files for searchability."""
+        logger.info("Processing JSON files...")
 
-        query = self.queries.summarize_json_files(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
+        # Use direct JSON parsing instead of ML.GENERATE_TEXT
+        query = f"""
+        INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.documents`
+        SELECT
+            GENERATE_UUID() AS doc_id,
+            uri AS uri,
+            'json' AS modality,
+            'json' AS source,
+            CURRENT_TIMESTAMP() AS created_at,
+            NULL AS author,
+            NULL AS channel,
+            -- Convert JSON to searchable text format
+            TO_JSON_STRING(PARSE_JSON(SAFE_CONVERT_BYTES_TO_STRING(data))) AS text_content,
+            content_type AS mime_type,
+            TO_JSON(STRUCT(
+                size,
+                updated AS last_modified,
+                generation
+            )) AS meta,
+            NULL AS chunk_index,
+            NULL AS chunk_start,
+            NULL AS chunk_end,
+            NULL AS embedding
+        FROM `{self.config.project_id}.{self.config.dataset_name}.obj_json`
+        WHERE uri NOT IN (
+            SELECT DISTINCT uri FROM `{self.config.project_id}.{self.config.dataset_name}.documents`
+            WHERE modality = 'json'
         )
+        """
 
         try:
             job = self.client.execute_query(query)
-            job.result()
+            logger.info("Query submitted, waiting for completion...")
+            job.result(timeout=300)  # 5 minute timeout
             num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Summarized {num_rows} JSON files")
+            logger.info(f"Processed {num_rows} JSON files")
             return num_rows
         except Exception as e:
-            logger.error(f"Failed to summarize JSON files: {e}")
+            logger.error(f"Failed to process JSON files: {e}")
             return 0
 
     def summarize_csv_files(self) -> int:
-        """Summarize CSV files for searchability."""
-        logger.info("Summarizing CSV files...")
+        """Process CSV files for searchability."""
+        logger.info("Processing CSV files...")
 
-        query = self.queries.summarize_csv_files(
-            self.config.project_id,
-            self.config.dataset_name,
-            self.config.text_model
+        # Convert CSV data to searchable text format without ML.GENERATE_TEXT
+        query = f"""
+        INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.documents`
+        SELECT
+            GENERATE_UUID() AS doc_id,
+            uri AS uri,
+            'csv' AS modality,
+            'csv' AS source,
+            CURRENT_TIMESTAMP() AS created_at,
+            NULL AS author,
+            NULL AS channel,
+            -- Convert CSV to searchable text
+            SAFE_CONVERT_BYTES_TO_STRING(data) AS text_content,
+            content_type AS mime_type,
+            TO_JSON(STRUCT(
+                size,
+                updated AS last_modified,
+                generation
+            )) AS meta,
+            NULL AS chunk_index,
+            NULL AS chunk_start,
+            NULL AS chunk_end,
+            NULL AS embedding
+        FROM `{self.config.project_id}.{self.config.dataset_name}.obj_csv`
+        WHERE uri NOT IN (
+            SELECT DISTINCT uri FROM `{self.config.project_id}.{self.config.dataset_name}.documents`
+            WHERE modality = 'csv'
         )
+        """
 
         try:
             job = self.client.execute_query(query)
-            job.result()
+            logger.info("Query submitted, waiting for completion...")
+            job.result(timeout=300)  # 5 minute timeout
             num_rows = job.num_dml_affected_rows or 0
-            logger.info(f"Summarized {num_rows} CSV files")
+            logger.info(f"Processed {num_rows} CSV files")
             return num_rows
         except Exception as e:
-            logger.error(f"Failed to summarize CSV files: {e}")
+            logger.error(f"Failed to process CSV files: {e}")
             return 0
 
     def extract_document_text(self) -> int:
@@ -215,7 +228,8 @@ class TextExtractor:
 
         try:
             job = self.client.execute_query(query)
-            job.result()
+            logger.info("Query submitted, waiting for completion...")
+            job.result(timeout=300)  # 5 minute timeout
             num_rows = job.num_dml_affected_rows or 0
             logger.info(f"Extracted text from {num_rows} office documents")
             return num_rows

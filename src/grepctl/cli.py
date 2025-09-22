@@ -109,7 +109,8 @@ def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_si
 
         stats = pipeline.run(
             modalities=modalities_list,
-            batch_size=batch_size
+            batch_size=batch_size,
+            generate_embeddings=False
         )
 
         progress.update(task, completed=True)
@@ -205,7 +206,318 @@ def setup(ctx, connection):
         manager.create_functions()
         progress.update(task, completed=True)
 
+        # Create embedding model
+        task = progress.add_task("Creating embedding model...", total=None)
+        manager.init_models()
+        progress.update(task, completed=True)
+
     console.print("[green]Setup completed successfully!")
+
+
+@cli.command()
+@click.pass_context
+def check(ctx):
+    """Check system health and service availability."""
+    config = ctx.obj['config']
+    client = ctx.obj['client']
+
+    from .health_check import HealthChecker
+    from rich.panel import Panel
+    from rich.text import Text
+
+    checker = HealthChecker(client, config)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Running health checks...", total=None)
+        results = checker.run_all_checks()
+        progress.update(task, completed=True)
+
+    # Display results
+    console.print("\n[bold cyan]System Health Check Results[/bold cyan]\n")
+
+    # Overall status
+    if results['overall_status'] == 'healthy':
+        status_text = Text("✅ HEALTHY", style="bold green")
+    else:
+        status_text = Text("❌ UNHEALTHY", style="bold red")
+
+    console.print(Panel(
+        f"Overall Status: {status_text}\n"
+        f"Passed: {results['summary']['passed']} | "
+        f"Failed: {results['summary']['failed']} | "
+        f"Warnings: {results['summary']['warnings']}",
+        title="Summary",
+        border_style="cyan"
+    ))
+
+    # Detailed results for each check
+    for check_name, check_result in results['checks'].items():
+        # Determine style based on status
+        if check_result['status'] == 'passed':
+            title_style = "green"
+            status_icon = "✅"
+        else:
+            title_style = "red"
+            status_icon = "❌"
+
+        # Build content
+        content_lines = []
+
+        # Add details
+        if check_result.get('details'):
+            for key, value in check_result['details'].items():
+                content_lines.append(value)
+
+        # Add errors
+        if check_result.get('errors'):
+            content_lines.append("")
+            content_lines.append("[bold red]Errors:[/bold red]")
+            for error in check_result['errors']:
+                content_lines.append(f"  • {error}")
+
+        # Add warnings
+        if check_result.get('warnings'):
+            content_lines.append("")
+            content_lines.append("[bold yellow]Warnings:[/bold yellow]")
+            for warning in check_result['warnings']:
+                content_lines.append(f"  • {warning}")
+
+        # Add instructions
+        if check_result.get('instructions'):
+            content_lines.append("")
+            content_lines.append("[bold cyan]How to fix:[/bold cyan]")
+            for instruction in check_result['instructions']:
+                content_lines.append(instruction)
+
+        # Display panel
+        console.print(Panel(
+            "\n".join(content_lines),
+            title=f"{status_icon} {check_name.upper()}",
+            border_style=title_style,
+            padding=(1, 2)
+        ))
+
+    # Final recommendations
+    if results['summary']['failed'] > 0:
+        console.print("\n[bold yellow]⚠️  Action Required:[/bold yellow]")
+        console.print("Run the commands shown above to fix the failed checks.")
+        console.print("After fixing, run 'grepctl check' again to verify.\n")
+    elif results['summary']['warnings'] > 0:
+        console.print("\n[bold yellow]ℹ️  Optional Improvements:[/bold yellow]")
+        console.print("Some optional features are not configured.")
+        console.print("Review the warnings above if you want to enable them.\n")
+    else:
+        console.print("\n[bold green]✨ All systems operational![/bold green]")
+        console.print("Your grepctl installation is fully configured.\n")
+
+
+@cli.command()
+@click.option('--project', '-p', default='semgrep-472018', help='Google Cloud project ID')
+@click.option('--location', '-l', default='us-central1', help='Vertex AI location')
+@click.pass_context
+def enable(ctx, project, location):
+    """Enable all required Google Cloud APIs and verify model availability."""
+    from .enable_services import enable_services_and_models
+
+    apis_success, models_success = enable_services_and_models(project, location)
+
+    if not apis_success or not models_success:
+        sys.exit(1)
+
+
+@cli.command()
+@click.option('--setup', is_flag=True, help='Setup PDF metadata table')
+@click.option('--ingest', is_flag=True, help='Ingest PDFs with metadata')
+@click.option('--add-metadata', is_flag=True, help='Add sample metadata for PDFs')
+@click.option('--extract', is_flag=True, help='Extract text from PDFs using Document AI')
+@click.pass_context
+def pdfs(ctx, setup, ingest, add_metadata, extract):
+    """Manage PDF ingestion and metadata for semantic search."""
+    config = ctx.obj['config']
+    client = ctx.obj['client']
+
+    from .ingestion.pdf_processor import PDFProcessor
+
+    processor = PDFProcessor(client, config)
+
+    if setup:
+        console.print("[yellow]Setting up PDF metadata table...[/yellow]")
+        processor.create_pdf_metadata_table()
+        console.print("[green]✓ PDF metadata table ready[/green]")
+
+    if add_metadata:
+        console.print("[yellow]Adding sample PDF metadata...[/yellow]")
+        processor.add_sample_pdf_metadata()
+        console.print("[green]✓ Sample metadata added[/green]")
+
+    if ingest:
+        console.print("[yellow]Ingesting PDFs with metadata...[/yellow]")
+
+        # First ingest to documents table
+        docs_count = processor.ingest_pdfs_with_metadata()
+        console.print(f"[green]✓ Ingested {docs_count} PDFs to documents table[/green]")
+
+        # Then update search corpus
+        corpus_count = processor.update_search_corpus()
+        console.print(f"[green]✓ Added {corpus_count} PDFs to search corpus[/green]")
+
+        # Generate embeddings
+        console.print("[yellow]Generating embeddings for PDFs...[/yellow]")
+        from .ingestion.embeddings import EmbeddingManager
+        embed_manager = EmbeddingManager(client, config)
+        stats = embed_manager.update_embeddings()
+        console.print(f"[green]✓ Generated {stats['new_embeddings']} new embeddings[/green]")
+
+        console.print("\n[bold green]PDFs ready for semantic search![/bold green]")
+        console.print("Try: grepctl search 'machine learning transformer' --top-k 5")
+
+    if extract:
+        console.print("[yellow]Extracting text from PDFs using Document AI...[/yellow]")
+        console.print("[dim]This will process up to 5 PDFs at a time[/dim]")
+
+        processed = processor.process_pdfs_with_document_ai()
+        console.print(f"[green]✓ Processed {processed} PDFs with Document AI[/green]")
+
+        if processed > 0:
+            # Regenerate embeddings for updated PDFs
+            console.print("[yellow]Regenerating embeddings for updated PDFs...[/yellow]")
+            from .ingestion.embeddings import EmbeddingManager
+            embed_manager = EmbeddingManager(client, config)
+            stats = embed_manager.update_embeddings()
+            console.print(f"[green]✓ Updated {stats['new_embeddings']} embeddings[/green]")
+
+    if not (setup or ingest or add_metadata or extract):
+        console.print("[yellow]Please specify an action: --setup, --add-metadata, --ingest, or --extract[/yellow]")
+
+
+@cli.command()
+@click.option('--setup', is_flag=True, help='Setup image descriptions table')
+@click.option('--ingest', is_flag=True, help='Ingest images with descriptions')
+@click.option('--add-descriptions', is_flag=True, help='Add sample descriptions for demo')
+@click.pass_context
+def images(ctx, setup, ingest, add_descriptions):
+    """Manage image ingestion and descriptions for semantic search."""
+    config = ctx.obj['config']
+    client = ctx.obj['client']
+
+    from .ingestion.image_processor import ImageProcessor
+
+    processor = ImageProcessor(client, config)
+
+    if setup:
+        console.print("[yellow]Setting up image descriptions table...[/yellow]")
+        processor.create_image_descriptions_table()
+        console.print("[green]✓ Image descriptions table ready[/green]")
+
+    if add_descriptions:
+        console.print("[yellow]Adding sample image descriptions...[/yellow]")
+        processor.add_sample_descriptions()
+        console.print("[green]✓ Sample descriptions added[/green]")
+
+    if ingest:
+        console.print("[yellow]Ingesting images with descriptions...[/yellow]")
+
+        # First ingest to documents table
+        docs_count = processor.ingest_images_with_descriptions()
+        console.print(f"[green]✓ Ingested {docs_count} images to documents table[/green]")
+
+        # Then update search corpus
+        corpus_count = processor.update_search_corpus()
+        console.print(f"[green]✓ Added {corpus_count} images to search corpus[/green]")
+
+        # Generate embeddings
+        console.print("[yellow]Generating embeddings for images...[/yellow]")
+        from .ingestion.embeddings import EmbeddingManager
+        embed_manager = EmbeddingManager(client, config)
+        stats = embed_manager.update_embeddings()
+        console.print(f"[green]✓ Generated {stats['new_embeddings']} new embeddings[/green]")
+
+        console.print("\n[bold green]Images ready for semantic search![/bold green]")
+        console.print("Try: grepctl search 'bird' --top-k 5")
+
+    if not (setup or ingest or add_descriptions):
+        console.print("[yellow]Please specify an action: --setup, --add-descriptions, or --ingest[/yellow]")
+
+
+@cli.command()
+@click.option('--setup', is_flag=True, help='Setup audio metadata tables')
+@click.option('--transcribe', is_flag=True, help='Transcribe audio files from GCS')
+@click.option('--batch-size', default=10, help='Number of files to process in each batch')
+@click.option('--add-speakers', is_flag=True, help='Add speaker identification metadata')
+@click.option('--process-batch', is_flag=True, help='Process a batch of audio files')
+@click.pass_context
+def audio(ctx, setup, transcribe, batch_size, add_speakers, process_batch):
+    """Manage audio ingestion and transcription for semantic search."""
+    config = ctx.obj['config']
+    client = ctx.obj['client']
+
+    from .ingestion.audio_processor import AudioProcessor
+
+    processor = AudioProcessor(client, config)
+
+    if setup:
+        console.print("[yellow]Setting up audio metadata tables...[/yellow]")
+        processor.create_audio_metadata_table()
+        console.print("[green]✓ Audio metadata tables ready[/green]")
+
+    if transcribe or process_batch:
+        console.print(f"[yellow]Processing audio files with batch size {batch_size}...[/yellow]")
+        console.print("[dim]Using Cloud Speech-to-Text API v2[/dim]")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Transcribing audio files...", total=None)
+
+            stats = processor.process_audio_files(batch_size=batch_size)
+
+            progress.update(task, completed=True)
+
+        # Display results
+        table = Table(title="Audio Processing Results")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+
+        table.add_row("Files Processed", str(stats['files_processed']))
+        table.add_row("Files Failed", str(stats['files_failed']))
+        table.add_row("Total Duration", f"{stats['total_duration_seconds']:.1f} seconds")
+        table.add_row("Chunks Created", str(stats['chunks_created']))
+        table.add_row("Processing Time", f"{stats['duration']:.1f} seconds")
+
+        console.print(table)
+
+        if stats['files_processed'] > 0:
+            # Update search corpus
+            console.print("[yellow]Updating search corpus...[/yellow]")
+            corpus_count = processor.update_search_corpus()
+            console.print(f"[green]✓ Added {corpus_count} audio documents to search corpus[/green]")
+
+            # Generate embeddings
+            console.print("[yellow]Generating embeddings for audio documents...[/yellow]")
+            from .ingestion.embeddings import EmbeddingManager
+            embed_manager = EmbeddingManager(client, config)
+            embed_stats = embed_manager.update_embeddings()
+            console.print(f"[green]✓ Generated {embed_stats['new_embeddings']} new embeddings[/green]")
+
+            console.print("\n[bold green]Audio files ready for semantic search![/bold green]")
+            console.print("Try: grepctl search 'conversation speech' --top-k 5")
+
+    if add_speakers:
+        console.print("[yellow]Speaker identification metadata feature coming soon![/yellow]")
+        console.print("Audio files are already processed with speaker diarization when available.")
+
+    if not (setup or transcribe or process_batch or add_speakers):
+        console.print("[yellow]Please specify an action: --setup, --transcribe, or --process-batch[/yellow]")
+        console.print("\nExamples:")
+        console.print("  grepctl audio --setup                # Setup audio metadata tables")
+        console.print("  grepctl audio --transcribe            # Process all audio files")
+        console.print("  grepctl audio --process-batch --batch-size 5  # Process in smaller batches")
 
 
 @cli.command()
