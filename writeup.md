@@ -1,12 +1,4 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/grepctl_logo.png" alt="grepctl logo" width="200">
-
-  # grepctl - Semantic Search For Your Data Lake
-
-  [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
-  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-</div>
+# grepctl - Semantic Search For Your Data Lake 
 
 **grepctl** is a utility that converts unstructured content in your data lake into a semantically searchable index with a single command:
 
@@ -247,8 +239,3 @@ results = search("query", top_k=10, rerank=True)
 ```
 
 You now have a powerful, simple Python API for semantic search across all your data. The SearchClient handles all the complexity of BigQuery connections, embedding models, and vector search - you just focus on building great applications!
-
-## Documentation
-
-- [Python Interface Guide](PYTHON_INTERFACE.md) - Complete examples and API reference for Python integration
-- [SQL Interface Guide](SQL_INTERFACE.md) - BigQuery SQL functions and advanced query examples

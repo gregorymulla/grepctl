@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: grepctl
-Version: 0.2.1
+Version: 0.3.0
 Summary: One-command orchestration for multimodal semantic search in BigQuery
 Author-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
 Maintainer-email: Gregory Mulla <gregory.cr.mulla@gmail.com>
@@ -69,480 +69,254 @@ Dynamic: license-file
 <div align="center">
   <img src="https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/grepctl_logo.png" alt="grepctl logo" width="200">
 
-  # grepctl - BigQuery Semantic Search Orchestrator
+  # grepctl - Semantic Search For Your Data Lake
 
   [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
-🚀 **One-command multimodal semantic search across your entire data lake using BigQuery ML and Google Cloud AI.**
-
-## 📦 Installation
+**grepctl** is a utility that converts unstructured content in your data lake into a semantically searchable index with a single command:
 
 ```bash
-# Install from PyPI
-pip install grepctl
+grepctl ingest -b <bucket>
 ```
 
-## 🎯 Quick Start - From Zero to Search in One Command
+## Data Modalities & Processing
+
+grepctl processes **9 different data types** automatically:
+
+| Modality | Processing Method |
+|----------|-------------------|
+| **Text/Markdown** | Direct content extraction, preserving structure |
+| **PDF** | OCR via Google Document AI for text extraction |
+| **Office Documents** | Document AI extracts content from .docx, .xlsx, .pptx |
+| **Images** | Vision API extracts labels, text, objects, and faces |
+| **Audio** | Speech-to-Text API transcribes to searchable text |
+| **Video** | Video Intelligence API analyzes frames and transcribes speech |
+| **JSON/CSV** | Structured data parsing with field preservation |
+
+Each modality is converted to text, chunked intelligently, and embedded using Vertex AI's text-embedding-004 model (768 dimensions) for semantic understanding.
+
+## Four Search Interfaces
+
+Access your indexed data through multiple interfaces:
+
+1. **CLI** - Command-line search:
+   ```bash
+   grepctl search "your query"
+   ```
+
+2. **Web Interface** - Interactive UI:
+   ```bash
+   grepctl serve
+   ```
+
+3. **Python Interface** - Programmatic access:
+   ```python
+   from grepctl.search.vector_search import SemanticSearch
+   results = searcher.search("query", top_k=10)
+   ```
+
+4. **SQL Interface** - Direct BigQuery queries:
+   ```sql
+   WITH query_embedding AS (
+     SELECT ml_generate_embedding_result AS embedding
+     FROM ML.GENERATE_EMBEDDING(
+       MODEL `project.mmgrep.text_embedding_model`,
+       (SELECT 'your search string' AS content)
+     )
+   )
+   SELECT doc_id, text_content, distance AS score
+   FROM VECTOR_SEARCH(
+     TABLE `project.mmgrep.search_corpus`,
+     'embedding',
+     (SELECT embedding FROM query_embedding),
+     top_k => 10
+   )
+   ```
+
+All interfaces leverage BigQuery's VECTOR_SEARCH for sub-second semantic search across your entire data lake.
+
+## Detailed Processing Pipeline
+
+### 1. Text Files (.txt, .log, .md)
+- **Direct extraction** from Google Cloud Storage via BigQuery's `EXTERNAL_QUERY` function
+- No intermediate processing needed - text content read directly into BigQuery tables
+- Content is chunked into 1000-character segments with 100-character overlap
+- Markdown structure preserved with heading hierarchy
+- Each chunk maintains context through overlapping windows
+
+### 2. PDF Documents (.pdf)
+- **Google Document AI** performs OCR on all pages
+- Handles both text-based and scanned PDFs
+- Extracted text is chunked semantically by paragraphs
+- Page numbers and document structure preserved in metadata
+
+### 3. Office Documents (.docx, .xlsx, .pptx)
+- **Document AI** extracts text content
+- Preserves document structure (headings, tables, slides)
+- Excel sheets converted to structured text representation
+- PowerPoint slides maintain slide order and notes
+
+### 4. Audio Files (.mp3, .wav, .m4a, .flac)
+- **Speech-to-Text API v2** provides accurate transcription
+- Automatic punctuation and speaker diarization
+- Supports long-form audio (up to 480 minutes)
+- Transcripts chunked by natural speech boundaries
+- Timestamps preserved for temporal search
+
+### 5. Video Files (.mp4, .avi, .mov, .mkv)
+- **Video Intelligence API** analyzes visual content:
+  - Shot detection and scene changes
+  - Object tracking and label detection
+  - OCR on text appearing in frames
+  - Face and logo detection
+- **Speech-to-Text** transcribes audio track separately
+- Frame descriptions combined with transcripts
+- Temporal alignment between visual and audio elements
+
+Each processing pipeline outputs structured text that is then embedded using Vertex AI's text-embedding-004 model, creating 768-dimensional vectors optimized for semantic similarity search.
+
+## SQL Interface Functions
+
+### Setup
+
+The search functions are automatically created when you run:
 
 ```bash
-# Complete setup with automatic data ingestion
-grepctl init all --bucket your-bucket --auto-ingest
-
-# Start searching immediately
-grepctl search "find all mentions of machine learning"
+grepctl setup
 ```
 
-That's it! The system automatically:
-- ✅ Enables all required Google Cloud APIs
-- ✅ Creates BigQuery dataset and tables
-- ✅ Deploys Vertex AI embedding models
-- ✅ Ingests all 8 data modalities from your GCS bucket
-- ✅ Generates 768-dimensional embeddings
-- ✅ Configures semantic search with VECTOR_SEARCH
+This creates the following functions in your BigQuery dataset:
 
-## 📊 What is grepctl?
+1. **`search(query)`** - Simple search with defaults
+2. **`semantic_search(query, top_k, min_relevance)`** - Full control search
+3. **`search_by_source(query, sources, top_k)`** - Filter by file types
+4. **`search_by_date(query, start_date, end_date, top_k)`** - Date range search
+5. **`search_content(query, limit)`** - Just return content strings
 
-`grepctl` is a powerful command-line orchestration tool that transforms your Google Cloud Storage data lake into a searchable knowledge base. It provides a unified interface for searching across **8 different data types**:
-- 📄 **Text & Markdown** - Direct content extraction
-- 📑 **PDF Documents** - OCR with Document AI
-- 🖼️ **Images** - Vision API analysis (labels, text, objects, faces)
-- 🎵 **Audio Files** - Speech-to-Text transcription
-- 🎬 **Video Files** - Video Intelligence analysis
-- 📊 **JSON & CSV** - Structured data parsing
+### Function Reference
 
-All searchable through semantic understanding, not just keywords!
-
-## 🏗️ Architecture Overview
-
-
-![Architecture](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/mmgrep.png)
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-
-1. **Google Cloud Project** with billing enabled
-2. **Python 3.11+**
-3. **gcloud CLI** authenticated with appropriate permissions
-
-### Install from PyPI
-
-```bash
-# Install the package
-pip install grepctl
-
-# Verify installation
-grepctl --help
-```
-
-### Install from Source
-
-```bash
-# Clone repository
-git clone https://github.com/gregorymulla/grepctl.git
-cd grepctl
-
-# Install with uv (recommended)
-uv sync
-uv run grepctl --help
-
-# Or install with pip
-pip install -e .
-grepctl --help
-```
-
-### Complete System Setup
-
-#### Option 1: Fully Automated (Recommended)
-
-```bash
-# One command does everything!
-grepctl init all --bucket your-bucket --auto-ingest
-
-# This single command:
-# 1. Enables 7 Google Cloud APIs
-# 2. Creates BigQuery dataset and 3 tables
-# 3. Deploys 3 Vertex AI models
-# 4. Ingests all files from GCS
-# 5. Generates embeddings
-# 6. Sets up semantic search
-```
-
-#### Option 2: Step-by-Step Control
-
-```bash
-# Enable APIs
-grepctl apis enable --all
-
-# Initialize BigQuery
-grepctl init dataset
-grepctl init models
-
-# Ingest data
-grepctl ingest all
-
-# Generate embeddings
-grepctl index update
-
-# Start searching
-grepctl search "your query"
-```
-
-## 🔍 Using the System
-
-### Web User Interface
-
-Start the web server with a beautiful, responsive search interface:
-
-```bash
-# Start the web server (default port 8000)
-grepctl serve
-
-# Start with custom port
-grepctl serve --port 3000
-
-# Start with auto-reload for development
-grepctl serve --reload
-```
-
-Then open your browser to `http://localhost:8000` to access:
-- 🎨 Clean, modern interface with your company logo
-- 📱 **Mobile-friendly responsive design** - Works seamlessly on phones, tablets, and desktops
-- ⚡ Real-time search across all modalities
-- 📊 Live system status and document count
-- 🔍 Relevance scoring and result highlighting
-- 🌐 Touch-optimized interface for mobile devices
-
-![Web Interface](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/web-ui.png)
-
-
-### Command Line Interface
-
-```bash
-# Search across all data
-grepctl search "machine learning algorithms"
-
-# Search specific modalities
-grepctl search "error handling" -k 20 -m pdf -m markdown
-
-# Check system status
-grepctl status
-
-# View all available commands
-grepctl --help
-```
-
-```bash
-grepctl search "bird"
-```
-
-![CLI Search Result](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/cli-search-result.png)
-
-
-### SQL Interface
+#### Core Search Functions
 
 ```sql
--- Direct semantic search
-WITH query_embedding AS (
-  SELECT ml_generate_embedding_result AS embedding
-  FROM ML.GENERATE_EMBEDDING(
-    MODEL `your-project.mmgrep.text_embedding_model`,
-    (SELECT 'machine learning' AS content),
-    STRUCT(TRUE AS flatten_json_output)
-  )
-)
-SELECT doc_id, source, text_content, distance AS score
-FROM VECTOR_SEARCH(
-  TABLE `your-project.mmgrep.search_corpus`,
-  'embedding',
-  (SELECT embedding FROM query_embedding),
-  top_k => 10
-)
-ORDER BY distance;
+-- Simple search (defaults: top_k=10, min_relevance=0.0)
+CALL `your-project.grepmm.search`("your query");
+
+-- Full semantic search
+CALL `your-project.grepmm.semantic_search`(
+    "query text",           -- Search query
+    20,                     -- Number of results
+    0.7                     -- Minimum relevance (0-1)
+);
+
+-- Returns:
+-- doc_id, uri, source, modality, text_content,
+-- relevance_score, created_at, metadata
 ```
 
-### Python API (When installed from source)
+#### Filtered Search Functions
 
-```python
-from grepctl.search.vector_search import SemanticSearch
-from grepctl.bigquery.connection import BigQueryClient
-from grepctl.config import load_config
+```sql
+-- Search by source types
+CALL `your-project.grepmm.search_by_source`(
+    "query",
+    ["pdf", "markdown"],    -- Array of sources
+    10                      -- Top K results
+);
 
-# Load configuration
-config = load_config()
-client = BigQueryClient(config)
+-- Search by date range
+CALL `your-project.grepmm.search_by_date`(
+    "query",
+    DATE('2024-01-01'),     -- Start date
+    CURRENT_DATE(),         -- End date
+    15                      -- Top K results
+);
 
-# Initialize searcher
-searcher = SemanticSearch(client, config)
-
-# Search across all modalities
-results = searcher.search(
-    query="neural networks",
-    top_k=20,
-    source_filter=['pdf', 'images'],
-    use_rerank=True
-)
+-- Get just content
+CALL `your-project.grepmm.search_content`(
+    "query",
+    5                       -- Limit
+);
 ```
 
-## 📈 System Capabilities
+The functions handle all the complexity of embeddings and vector search - you just write simple SQL queries!
 
-### Current Status (Production Ready)
-- ✅ **425+ documents** indexed across 8 modalities
-- ✅ **768-dimensional embeddings** for semantic understanding
-- ✅ **Sub-second query response** times
-- ✅ **100% embedding coverage** for all documents
-- ✅ **5 Google Cloud APIs** integrated
-- ✅ **Auto-recovery** from embedding issues
+## Python API Functions
 
-### Supported Operations
-| Operation | Command | Description |
-|-----------|---------|-------------|
-| **Setup** | `grepctl init all --auto-ingest` | Complete one-command setup |
-| **Ingest** | `grepctl ingest all` | Process all file types |
-| **Index** | `grepctl index update` | Generate embeddings |
-| **Fix** | `grepctl fix embeddings` | Auto-fix dimension issues |
-| **Search** | `grepctl search "query"` | Semantic search |
-| **Status** | `grepctl status` | System health check |
-
-## 🧰 grepctl Commands
-
-### Complete CLI Management
+### Installation
 
 ```bash
-# System initialization
-grepctl init all --bucket your-bucket --auto-ingest
+# Using uv (recommended)
+uv add grepctl
 
-# API management
-grepctl apis enable --all
-grepctl apis check
+# Using pip
+pip install grepctl
 
-# Data ingestion
-grepctl ingest pdf        # Process PDFs
-grepctl ingest images     # Analyze images with Vision API
-grepctl ingest audio      # Transcribe audio
-grepctl ingest video      # Analyze videos
-
-# Index management
-grepctl index rebuild     # Rebuild from scratch
-grepctl index update      # Update missing embeddings
-grepctl index verify      # Check embedding health
-
-# Troubleshooting
-grepctl fix embeddings    # Fix dimension issues
-grepctl fix stuck         # Handle stuck processing
-grepctl fix validate      # Check data integrity
-
-# Search
-grepctl search "query" -k 20 -o json
-
-# Web Interface (NEW!)
-grepctl serve             # Start web UI at http://localhost:8000
-grepctl serve --port 3000 --theme-config ./my-theme.yaml
+# For development
+git clone <repo>
+cd bq-semgrep
+uv sync
 ```
 
 ### Configuration
 
-grepctl uses `~/.grepctl.yaml` for configuration:
+The SearchClient will automatically use your existing grepctl configuration from `~/.grepctl/config.yaml`:
 
 ```yaml
 project_id: your-project
-dataset: mmgrep
-bucket: your-bucket
-location: US
-batch_size: 100
-chunk_size: 1000
+dataset_name: grepmm
+location: us-central1
 ```
 
-## 📊 Supported Data Types
+Or you can specify a custom config path:
 
-| Modality | Extensions | Processing Method | Google API Used |
-|----------|------------|-------------------|-----------------|
-| Text | .txt, .log | Direct extraction | — |
-| Markdown | .md | Markdown parsing | — |
-| PDF | .pdf | OCR extraction | Document AI |
-| Images | .jpg, .png, .gif | Visual analysis | Vision API |
-| Audio | .mp3, .wav, .m4a | Transcription | Speech-to-Text |
-| Video | .mp4, .avi, .mov | Frame + audio analysis | Video Intelligence |
-| JSON | .json, .jsonl | Structured parsing | — |
-| CSV | .csv, .tsv | Tabular analysis | — |
-
-## 🌐 Web Interface
-
-grepctl now includes a beautiful, customizable web UI for semantic search!
-
-### Starting the Web Interface
-
-```bash
-# Quick start - serves at http://localhost:8000
-grepctl serve
-
-# Custom port and theme
-grepctl serve --port 3000 --theme-config ./my-company-theme.yaml
-
-# Development mode with auto-reload
-grepctl serve --reload
+```python
+client = SearchClient(config_path="/path/to/config.yaml")
 ```
 
-### Features
-- 🎨 **Fully Customizable** - Change colors, logo, and branding
-- 🌓 **Dark Mode** - Built-in dark/light theme support
-- 🔍 **Google-like Interface** - Familiar, intuitive search experience
-- ⚡ **Real-time Search** - Search as you type with debouncing
-- 📊 **Advanced Filters** - Filter by modality, date, and more
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- ⌨️ **Keyboard Shortcuts** - Press `/` to focus search
+Or override the project ID:
 
-### Customization
-
-See [UI Customization Guide](docs/UI_CUSTOMIZATION_GUIDE.md) for detailed instructions on:
-- Adding your company logo
-- Changing color schemes
-- Creating custom themes
-- White-labeling the interface
-
-Quick customization example:
-```yaml
-# my-company-theme.yaml
-branding:
-  companyName: "Acme Corp"
-  logo: "/static/acme-logo.svg"
-colors:
-  primary: "#FF5722"
-  secondary: "#FFC107"
+```python
+client = SearchClient(project_id="my-project-id")
 ```
 
-## 🚀 Advanced Features
+### API Reference
 
-### Multimodal Search
-Search across all data types simultaneously:
-```bash
-# Find mentions across PDFs, images, and videos
-grepctl search "quarterly revenue" -m pdf -m images -m video
+#### SearchClient Methods
+
+```python
+# Full search with all options
+results = client.search(
+    query="search text",           # Search query
+    top_k=10,                      # Number of results
+    sources=['pdf', 'text'],       # Filter by source types
+    rerank=False,                  # Use LLM reranking
+    regex_filter=r"pattern",       # Regex filter
+    start_date="2023-01-01",       # Date range start
+    end_date="2024-12-31"          # Date range end
+)
+
+# Simple search - just returns content strings
+contents = client.search_simple("query", limit=5)
+
+# Get system statistics
+stats = client.get_stats()
 ```
 
-### Automatic Processing
-- **Vision API** extracts text, labels, objects from images
-- **Document AI** performs OCR on scanned PDFs
-- **Speech-to-Text** transcribes audio with punctuation
-- **Video Intelligence** analyzes frames and transcribes speech
+#### Convenience Function
 
-### Error Recovery
-```bash
-# Automatic fix for common issues
-grepctl fix embeddings    # Fixes dimension mismatches
-grepctl fix stuck         # Clears stuck processing
+```python
+from grepctl import search
+
+# Quick search without client
+results = search("query", top_k=10, rerank=True)
 ```
 
+You now have a powerful, simple Python API for semantic search across all your data. The SearchClient handles all the complexity of BigQuery connections, embedding models, and vector search - you just focus on building great applications!
 
-## 🔧 Troubleshooting
+## Documentation
 
-### Common Issues & Solutions
-
-| Issue | Solution |
-|-------|----------|
-| "Permission denied" | Run `gcloud auth login` and ensure BigQuery Admin role |
-| "Dataset not found" | Run `grepctl init dataset` |
-| "Embedding dimension mismatch" | Run `grepctl fix embeddings` |
-| "No search results" | Check `grepctl status` and run `grepctl index update` |
-| "API not enabled" | Run `grepctl apis enable --all` |
-
-### Quick Diagnostics
-
-```bash
-# Check everything
-grepctl status
-
-# Verify APIs
-grepctl apis check
-
-# Check embeddings
-grepctl index verify
-
-# Fix any issues
-grepctl fix embeddings
-```
-
-## 🎯 Example Use Cases
-
-1. **Code Search**: Find code patterns across repositories
-2. **Document Discovery**: Search PDFs for specific topics
-3. **Media Analysis**: Find content in images and videos
-4. **Log Analysis**: Semantic search through log files
-5. **Data Mining**: Query structured data semantically
-
-## 📈 Performance
-
-- **Ingestion**: ~50 docs/second for text
-- **Embedding Generation**: ~20 docs/second
-- **Search Latency**: <1 second for most queries
-- **Storage**: ~500MB for 425+ documents
-- **Accuracy**: 768-dimensional embeddings for semantic precision
-
-## 📦 Package Information
-
-- **PyPI**: https://pypi.org/project/grepctl/
-- **Version**: 0.1.0
-- **Requirements**: Python 3.11+, Google Cloud Project
-- **License**: MIT
-
-## 🤝 Contributing
-
-Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/grepctl.git
-cd grepctl
-
-# Install in development mode with uv
-uv sync
-uv add --dev pytest black flake8
-
-# Run tests
-uv run pytest
-
-# Format code
-uv run black .
-```
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-Built with:
-- Google BigQuery ML
-- Vertex AI (text-embedding-004)
-- Google Cloud Vision, Document AI, Speech-to-Text, Video Intelligence APIs
-- Python, Click, and Rich CLI libraries
-
-## 📊 Citation
-
-If you use grepctl in your research or project, please cite:
-
-```bibtex
-@software{grepctl2024,
-  title = {grepctl: One-Command Orchestration for Multimodal Semantic Search in BigQuery},
-  author = {Mulla, Gregory},
-  year = {2024},
-  url = {https://github.com/yourusername/grepctl},
-  version = {0.1.0}
-}
-```
-
----
-
-**Ready to transform your data lake into a searchable knowledge base?**
-
-```bash
-pip install grepctl
-grepctl init all --bucket your-bucket --auto-ingest
-```
-
-🎉 That's all it takes!
+- [Python Interface Guide](PYTHON_INTERFACE.md) - Complete examples and API reference for Python integration
+- [SQL Interface Guide](SQL_INTERFACE.md) - BigQuery SQL functions and advanced query examples

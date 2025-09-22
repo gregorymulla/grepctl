@@ -1,0 +1,480 @@
+<div align="center">
+  <img src="https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/grepctl_logo.png" alt="grepctl logo" width="200">
+
+  # grepctl - BigQuery Semantic Search Orchestrator
+
+  [![PyPI version](https://badge.fury.io/py/grepctl.svg)](https://pypi.org/project/grepctl/)
+  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
+
+🚀 **One-command multimodal semantic search across your entire data lake using BigQuery ML and Google Cloud AI.**
+
+## 📦 Installation
+
+```bash
+# Install from PyPI
+pip install grepctl
+```
+
+## 🎯 Quick Start - From Zero to Search in One Command
+
+```bash
+# Complete setup with automatic data ingestion
+grepctl init all --bucket your-bucket --auto-ingest
+
+# Start searching immediately
+grepctl search "find all mentions of machine learning"
+```
+
+That's it! The system automatically:
+- ✅ Enables all required Google Cloud APIs
+- ✅ Creates BigQuery dataset and tables
+- ✅ Deploys Vertex AI embedding models
+- ✅ Ingests all 8 data modalities from your GCS bucket
+- ✅ Generates 768-dimensional embeddings
+- ✅ Configures semantic search with VECTOR_SEARCH
+
+## 📊 What is grepctl?
+
+`grepctl` is a powerful command-line orchestration tool that transforms your Google Cloud Storage data lake into a searchable knowledge base. It provides a unified interface for searching across **8 different data types**:
+- 📄 **Text & Markdown** - Direct content extraction
+- 📑 **PDF Documents** - OCR with Document AI
+- 🖼️ **Images** - Vision API analysis (labels, text, objects, faces)
+- 🎵 **Audio Files** - Speech-to-Text transcription
+- 🎬 **Video Files** - Video Intelligence analysis
+- 📊 **JSON & CSV** - Structured data parsing
+
+All searchable through semantic understanding, not just keywords!
+
+## 🏗️ Architecture Overview
+
+
+![Architecture](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/mmgrep.png)
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+
+1. **Google Cloud Project** with billing enabled
+2. **Python 3.11+**
+3. **gcloud CLI** authenticated with appropriate permissions
+
+### Install from PyPI
+
+```bash
+# Install the package
+pip install grepctl
+
+# Verify installation
+grepctl --help
+```
+
+### Install from Source
+
+```bash
+# Clone repository
+git clone https://github.com/gregorymulla/grepctl.git
+cd grepctl
+
+# Install with uv (recommended)
+uv sync
+uv run grepctl --help
+
+# Or install with pip
+pip install -e .
+grepctl --help
+```
+
+### Complete System Setup
+
+#### Option 1: Fully Automated (Recommended)
+
+```bash
+# One command does everything!
+grepctl init all --bucket your-bucket --auto-ingest
+
+# This single command:
+# 1. Enables 7 Google Cloud APIs
+# 2. Creates BigQuery dataset and 3 tables
+# 3. Deploys 3 Vertex AI models
+# 4. Ingests all files from GCS
+# 5. Generates embeddings
+# 6. Sets up semantic search
+```
+
+#### Option 2: Step-by-Step Control
+
+```bash
+# Enable APIs
+grepctl apis enable --all
+
+# Initialize BigQuery
+grepctl init dataset
+grepctl init models
+
+# Ingest data
+grepctl ingest all
+
+# Generate embeddings
+grepctl index update
+
+# Start searching
+grepctl search "your query"
+```
+
+## 🔍 Using the System
+
+### Web User Interface
+
+Start the web server with a beautiful, responsive search interface:
+
+```bash
+# Start the web server (default port 8000)
+grepctl serve
+
+# Start with custom port
+grepctl serve --port 3000
+
+# Start with auto-reload for development
+grepctl serve --reload
+```
+
+Then open your browser to `http://localhost:8000` to access:
+- 🎨 Clean, modern interface with your company logo
+- 📱 **Mobile-friendly responsive design** - Works seamlessly on phones, tablets, and desktops
+- ⚡ Real-time search across all modalities
+- 📊 Live system status and document count
+- 🔍 Relevance scoring and result highlighting
+- 🌐 Touch-optimized interface for mobile devices
+
+![Web Interface](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/web-ui.png)
+
+
+### Command Line Interface
+
+```bash
+# Search across all data
+grepctl search "machine learning algorithms"
+
+# Search specific modalities
+grepctl search "error handling" -k 20 -m pdf -m markdown
+
+# Check system status
+grepctl status
+
+# View all available commands
+grepctl --help
+```
+
+```bash
+grepctl search "bird"
+```
+
+![CLI Search Result](https://raw.githubusercontent.com/gregorymulla/grepctl/master/images/cli-search-result.png)
+
+
+### SQL Interface
+
+```sql
+-- Direct semantic search
+WITH query_embedding AS (
+  SELECT ml_generate_embedding_result AS embedding
+  FROM ML.GENERATE_EMBEDDING(
+    MODEL `your-project.mmgrep.text_embedding_model`,
+    (SELECT 'machine learning' AS content),
+    STRUCT(TRUE AS flatten_json_output)
+  )
+)
+SELECT doc_id, source, text_content, distance AS score
+FROM VECTOR_SEARCH(
+  TABLE `your-project.mmgrep.search_corpus`,
+  'embedding',
+  (SELECT embedding FROM query_embedding),
+  top_k => 10
+)
+ORDER BY distance;
+```
+
+### Python API (When installed from source)
+
+```python
+from grepctl.search.vector_search import SemanticSearch
+from grepctl.bigquery.connection import BigQueryClient
+from grepctl.config import load_config
+
+# Load configuration
+config = load_config()
+client = BigQueryClient(config)
+
+# Initialize searcher
+searcher = SemanticSearch(client, config)
+
+# Search across all modalities
+results = searcher.search(
+    query="neural networks",
+    top_k=20,
+    source_filter=['pdf', 'images'],
+    use_rerank=True
+)
+```
+
+## 📈 System Capabilities
+
+### Current Status (Production Ready)
+- ✅ **425+ documents** indexed across 8 modalities
+- ✅ **768-dimensional embeddings** for semantic understanding
+- ✅ **Sub-second query response** times
+- ✅ **100% embedding coverage** for all documents
+- ✅ **5 Google Cloud APIs** integrated
+- ✅ **Auto-recovery** from embedding issues
+
+### Supported Operations
+| Operation | Command | Description |
+|-----------|---------|-------------|
+| **Setup** | `grepctl init all --auto-ingest` | Complete one-command setup |
+| **Ingest** | `grepctl ingest all` | Process all file types |
+| **Index** | `grepctl index update` | Generate embeddings |
+| **Fix** | `grepctl fix embeddings` | Auto-fix dimension issues |
+| **Search** | `grepctl search "query"` | Semantic search |
+| **Status** | `grepctl status` | System health check |
+
+## 🧰 grepctl Commands
+
+### Complete CLI Management
+
+```bash
+# System initialization
+grepctl init all --bucket your-bucket --auto-ingest
+
+# API management
+grepctl apis enable --all
+grepctl apis check
+
+# Data ingestion
+grepctl ingest pdf        # Process PDFs
+grepctl ingest images     # Analyze images with Vision API
+grepctl ingest audio      # Transcribe audio
+grepctl ingest video      # Analyze videos
+
+# Index management
+grepctl index rebuild     # Rebuild from scratch
+grepctl index update      # Update missing embeddings
+grepctl index verify      # Check embedding health
+
+# Troubleshooting
+grepctl fix embeddings    # Fix dimension issues
+grepctl fix stuck         # Handle stuck processing
+grepctl fix validate      # Check data integrity
+
+# Search
+grepctl search "query" -k 20 -o json
+
+# Web Interface (NEW!)
+grepctl serve             # Start web UI at http://localhost:8000
+grepctl serve --port 3000 --theme-config ./my-theme.yaml
+```
+
+### Configuration
+
+grepctl uses `~/.grepctl.yaml` for configuration:
+
+```yaml
+project_id: your-project
+dataset: mmgrep
+bucket: your-bucket
+location: US
+batch_size: 100
+chunk_size: 1000
+```
+
+## 📊 Supported Data Types
+
+| Modality | Extensions | Processing Method | Google API Used |
+|----------|------------|-------------------|-----------------|
+| Text | .txt, .log | Direct extraction | — |
+| Markdown | .md | Markdown parsing | — |
+| PDF | .pdf | OCR extraction | Document AI |
+| Images | .jpg, .png, .gif | Visual analysis | Vision API |
+| Audio | .mp3, .wav, .m4a | Transcription | Speech-to-Text |
+| Video | .mp4, .avi, .mov | Frame + audio analysis | Video Intelligence |
+| JSON | .json, .jsonl | Structured parsing | — |
+| CSV | .csv, .tsv | Tabular analysis | — |
+
+## 🌐 Web Interface
+
+grepctl now includes a beautiful, customizable web UI for semantic search!
+
+### Starting the Web Interface
+
+```bash
+# Quick start - serves at http://localhost:8000
+grepctl serve
+
+# Custom port and theme
+grepctl serve --port 3000 --theme-config ./my-company-theme.yaml
+
+# Development mode with auto-reload
+grepctl serve --reload
+```
+
+### Features
+- 🎨 **Fully Customizable** - Change colors, logo, and branding
+- 🌓 **Dark Mode** - Built-in dark/light theme support
+- 🔍 **Google-like Interface** - Familiar, intuitive search experience
+- ⚡ **Real-time Search** - Search as you type with debouncing
+- 📊 **Advanced Filters** - Filter by modality, date, and more
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
+- ⌨️ **Keyboard Shortcuts** - Press `/` to focus search
+
+### Customization
+
+See [UI Customization Guide](docs/UI_CUSTOMIZATION_GUIDE.md) for detailed instructions on:
+- Adding your company logo
+- Changing color schemes
+- Creating custom themes
+- White-labeling the interface
+
+Quick customization example:
+```yaml
+# my-company-theme.yaml
+branding:
+  companyName: "Acme Corp"
+  logo: "/static/acme-logo.svg"
+colors:
+  primary: "#FF5722"
+  secondary: "#FFC107"
+```
+
+## 🚀 Advanced Features
+
+### Multimodal Search
+Search across all data types simultaneously:
+```bash
+# Find mentions across PDFs, images, and videos
+grepctl search "quarterly revenue" -m pdf -m images -m video
+```
+
+### Automatic Processing
+- **Vision API** extracts text, labels, objects from images
+- **Document AI** performs OCR on scanned PDFs
+- **Speech-to-Text** transcribes audio with punctuation
+- **Video Intelligence** analyzes frames and transcribes speech
+
+### Error Recovery
+```bash
+# Automatic fix for common issues
+grepctl fix embeddings    # Fixes dimension mismatches
+grepctl fix stuck         # Clears stuck processing
+```
+
+
+## 🔧 Troubleshooting
+
+### Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| "Permission denied" | Run `gcloud auth login` and ensure BigQuery Admin role |
+| "Dataset not found" | Run `grepctl init dataset` |
+| "Embedding dimension mismatch" | Run `grepctl fix embeddings` |
+| "No search results" | Check `grepctl status` and run `grepctl index update` |
+| "API not enabled" | Run `grepctl apis enable --all` |
+
+### Quick Diagnostics
+
+```bash
+# Check everything
+grepctl status
+
+# Verify APIs
+grepctl apis check
+
+# Check embeddings
+grepctl index verify
+
+# Fix any issues
+grepctl fix embeddings
+```
+
+## 🎯 Example Use Cases
+
+1. **Code Search**: Find code patterns across repositories
+2. **Document Discovery**: Search PDFs for specific topics
+3. **Media Analysis**: Find content in images and videos
+4. **Log Analysis**: Semantic search through log files
+5. **Data Mining**: Query structured data semantically
+
+## 📈 Performance
+
+- **Ingestion**: ~50 docs/second for text
+- **Embedding Generation**: ~20 docs/second
+- **Search Latency**: <1 second for most queries
+- **Storage**: ~500MB for 425+ documents
+- **Accuracy**: 768-dimensional embeddings for semantic precision
+
+## 📦 Package Information
+
+- **PyPI**: https://pypi.org/project/grepctl/
+- **Version**: 0.1.0
+- **Requirements**: Python 3.11+, Google Cloud Project
+- **License**: MIT
+
+## 🤝 Contributing
+
+Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/grepctl.git
+cd grepctl
+
+# Install in development mode with uv
+uv sync
+uv add --dev pytest black flake8
+
+# Run tests
+uv run pytest
+
+# Format code
+uv run black .
+```
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+Built with:
+- Google BigQuery ML
+- Vertex AI (text-embedding-004)
+- Google Cloud Vision, Document AI, Speech-to-Text, Video Intelligence APIs
+- Python, Click, and Rich CLI libraries
+
+## 📊 Citation
+
+If you use grepctl in your research or project, please cite:
+
+```bibtex
+@software{grepctl2024,
+  title = {grepctl: One-Command Orchestration for Multimodal Semantic Search in BigQuery},
+  author = {Mulla, Gregory},
+  year = {2024},
+  url = {https://github.com/yourusername/grepctl},
+  version = {0.1.0}
+}
+```
+
+---
+
+**Ready to transform your data lake into a searchable knowledge base?**
+
+```bash
+pip install grepctl
+grepctl init all --bucket your-bucket --auto-ingest
+```
+
+🎉 That's all it takes!

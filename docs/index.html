@@ -459,7 +459,7 @@
         <section class="install-section">
             <h2 class="install-title">🚀 Single Command to Get Started</h2>
             <div class="command-box">
-                <code class="command-text">grepctl init all --ingest-all</code>
+                <code class="command-text">grepctl ingest --bucket your-bucket</code>
             </div>
             <p class="copy-hint">Click to copy • Sets up your entire semantic search infrastructure in seconds</p>
         </section>
@@ -560,8 +560,8 @@
                     <h3 class="interface-title">SQL Interface</h3>
                     <p class="feature-desc">Query your multimodal data using familiar SQL syntax in BigQuery</p>
                     <div class="interface-example">
-                        SELECT * FROM semantic_index<br>
-                        WHERE similarity("product defect") > 0.8
+                        
+                        CALL `your-project.ds.search`("your query");
                     </div>
                 </div>
                 <div class="interface-card">
