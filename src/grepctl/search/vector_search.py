@@ -62,6 +62,39 @@ class SemanticSearch:
         logger.info(f"Found {len(results)} results")
         return results
 
+    def get_search_query(self,
+                         query: str,
+                         top_k: int = 20,
+                         source_filter: Optional[List[str]] = None,
+                         modality_filter: Optional[List[str]] = None,
+                         use_rerank: bool = False,
+                         regex_filter: Optional[str] = None,
+                         start_date: Optional[str] = None,
+                         end_date: Optional[str] = None) -> str:
+        """
+        Get the SQL query that would be executed for the search.
+
+        Args:
+            query: Search query text
+            top_k: Number of results to return
+            source_filter: Filter by source types (e.g., ['pdf', 'screenshot'])
+            modality_filter: Filter by modality (e.g., ['text', 'image'])
+            use_rerank: Whether to use LLM reranking
+            regex_filter: Additional regex pattern to match
+            start_date: Filter documents created after this date (YYYY-MM-DD)
+            end_date: Filter documents created before this date (YYYY-MM-DD)
+
+        Returns:
+            SQL query string
+        """
+        # Build filter conditions
+        filters = self._build_filters(
+            source_filter, modality_filter, regex_filter, start_date, end_date
+        )
+
+        # Build and return the search query
+        return self._build_search_query(query, top_k, filters, use_rerank)
+
     def _build_filters(self,
                        source_filter: Optional[List[str]],
                        modality_filter: Optional[List[str]],

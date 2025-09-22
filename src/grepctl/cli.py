@@ -41,13 +41,29 @@ def cli(ctx, config):
 @click.option('--start-date', help='Start date filter (YYYY-MM-DD)')
 @click.option('--end-date', help='End date filter (YYYY-MM-DD)')
 @click.option('--output', '-o', type=click.Choice(['table', 'json', 'csv']), default='table')
+@click.option('--show-query', is_flag=True, help='Show the SQL query instead of executing it')
 @click.pass_context
-def search(ctx, query, top_k, sources, rerank, regex, start_date, end_date, output):
+def search(ctx, query, top_k, sources, rerank, regex, start_date, end_date, output, show_query):
     """Search across all indexed documents using semantic search."""
     config = ctx.obj['config']
     client = ctx.obj['client']
 
     searcher = SemanticSearch(client, config)
+
+    # If show-query flag is set, just show the query and exit
+    if show_query:
+        sql_query = searcher.get_search_query(
+            query=query,
+            top_k=top_k,
+            source_filter=list(sources) if sources else None,
+            use_rerank=rerank,
+            regex_filter=regex,
+            start_date=start_date,
+            end_date=end_date
+        )
+        console.print("[bold cyan]Generated SQL Query:[/bold cyan]")
+        console.print(sql_query)
+        return
 
     with Progress(
         SpinnerColumn(),
@@ -173,7 +189,7 @@ def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_si
         stats = pipeline.run(
             modalities=modalities_list,
             batch_size=batch_size,
-            generate_embeddings=False
+            generate_embeddings=True
         )
 
         progress.update(task, completed=True)
