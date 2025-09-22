@@ -5,10 +5,12 @@ Command-line interface for BigQuery Semantic Grep.
 
 import click
 import sys
+import os
 from pathlib import Path
 from typing import Optional, List
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .config import Config, load_config
@@ -86,11 +88,51 @@ def search(ctx, query, top_k, sources, rerank, regex, start_date, end_date, outp
 @click.option('--batch-size', default=100, help='Batch size for processing')
 @click.option('--no-video', is_flag=True, help='Skip video processing to save time and costs')
 @click.option('--no-audio', is_flag=True, help='Skip audio processing to save time and costs')
+@click.option('--no-setup', is_flag=True, help='Skip initial setup step')
 @click.pass_context
-def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_size, no_video, no_audio):
-    """Ingest data from GCS into BigQuery for semantic search."""
+def ingest(ctx, bucket, dataset, modalities, chunk_size, chunk_overlap, batch_size, no_video, no_audio, no_setup):
+    """Ingest data from GCS into BigQuery for semantic search. Runs setup first unless --no-setup is specified."""
     config = ctx.obj['config']
     client = ctx.obj['client']
+
+    # Run setup first unless --no-setup is specified
+    if not no_setup:
+        console.print("[yellow]Running setup first...[/yellow]")
+
+        from .bigquery.schema import SchemaManager
+        manager = SchemaManager(client, config)
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            # Create dataset
+            task = progress.add_task("Creating dataset...", total=None)
+            manager.create_dataset()
+            progress.update(task, completed=True)
+
+            # Create tables
+            task = progress.add_task("Creating tables...", total=None)
+            manager.create_tables()
+            progress.update(task, completed=True)
+
+            # Create external tables
+            task = progress.add_task("Creating external tables...", total=None)
+            manager.create_external_tables()
+            progress.update(task, completed=True)
+
+            # Create functions
+            task = progress.add_task("Creating functions...", total=None)
+            manager.create_functions()
+            progress.update(task, completed=True)
+
+            # Create embedding model
+            task = progress.add_task("Creating embedding model...", total=None)
+            manager.init_models()
+            progress.update(task, completed=True)
+
+        console.print("[green]Setup completed successfully![/green]\n")
 
     # Update config with CLI parameters
     config.gcs_bucket = bucket
@@ -725,6 +767,55 @@ def status(ctx):
 
     except Exception as e:
         console.print(f"[red]Error checking status: {e}")
+
+
+@cli.command()
+@click.option('--host', '-h', default='0.0.0.0', help='Host to bind to')
+@click.option('--port', '-p', default=8000, help='Port to bind to')
+@click.option('--reload', is_flag=True, help='Enable auto-reload for development')
+@click.option('--theme-config', type=click.Path(exists=True), help='Path to theme configuration file')
+@click.option('--workers', '-w', default=1, help='Number of worker processes')
+@click.pass_context
+def serve(ctx, host, port, reload, theme_config, workers):
+    """Start the REST API server with web UI."""
+    config = ctx.obj['config']
+
+    console.print(Panel.fit(
+        f"🚀 [bold cyan]Starting grepctl API Server[/bold cyan]\n"
+        f"[green]➜[/green] API: http://{host}:{port}/api/docs\n"
+        f"[green]➜[/green] Web UI: http://{host}:{port}",
+        border_style="cyan"
+    ))
+
+    try:
+        # Check if uvicorn is installed
+        try:
+            import uvicorn
+        except ImportError:
+            console.print("[red]Error: uvicorn not installed. Run: uv add 'uvicorn[standard]'[/red]")
+            sys.exit(1)
+
+        # Set theme config environment variable if provided
+        if theme_config:
+            os.environ['GREPCTL_THEME_CONFIG'] = theme_config
+
+        # Set config in environment for the server to use
+        os.environ['GREPCTL_PROJECT_ID'] = config.project_id
+        os.environ['GREPCTL_DATASET_NAME'] = config.dataset_name
+        os.environ['GREPCTL_LOCATION'] = config.location
+
+        # Run the server
+        uvicorn.run(
+            "grepctl.api.server:app",
+            host=host,
+            port=port,
+            reload=reload,
+            workers=workers if not reload else 1,
+            log_level="info"
+        )
+    except Exception as e:
+        console.print(f"[red]Failed to start server: {e}[/red]")
+        sys.exit(1)
 
 
 def _display_results_table(results):

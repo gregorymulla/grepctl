@@ -122,6 +122,9 @@ class SchemaManager:
             logger.warning("Skipping function creation - project ID contains hyphens which aren't supported in MODEL clause within functions")
             return
 
+        # Create simplified search functions
+        self._create_search_functions()
+
         # Create semantic_grep_tf table function
         self._create_table_function()
 
@@ -129,6 +132,43 @@ class SchemaManager:
         self._create_stored_procedure()
 
         logger.info("Functions and procedures created successfully")
+
+    def _create_search_functions(self) -> None:
+        """Create simplified search functions for easy SQL usage."""
+        logger.info("Creating simplified search functions...")
+
+        # Load and execute the search function SQL
+        import os
+        function_sql_path = os.path.join(
+            os.path.dirname(__file__),
+            'search_function.sql'
+        )
+
+        if os.path.exists(function_sql_path):
+            with open(function_sql_path, 'r') as f:
+                sql_template = f.read()
+
+            # Replace placeholders with actual values
+            sql = sql_template.replace('{project_id}', self.config.project_id)
+            sql = sql.replace('{dataset_name}', self.config.dataset_name)
+
+            # Split and execute each function separately
+            functions = sql.split(';')
+            for func_sql in functions:
+                func_sql = func_sql.strip()
+                if func_sql and 'CREATE' in func_sql:
+                    try:
+                        self.client.execute_query_and_wait(func_sql)
+                        # Extract function name for logging
+                        if 'FUNCTION' in func_sql:
+                            import re
+                            match = re.search(r'FUNCTION\s+`[^`]+\.([^`]+)`', func_sql)
+                            if match:
+                                logger.info(f"Created function: {match.group(1)}")
+                    except Exception as e:
+                        logger.warning(f"Error creating function: {e}")
+        else:
+            logger.warning("Search function SQL file not found")
 
     def _create_table_function(self) -> None:
         """Create the semantic_grep_tf table function."""
