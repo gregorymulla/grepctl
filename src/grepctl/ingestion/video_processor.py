@@ -63,6 +63,8 @@ class VideoProcessor:
         self.max_segment_duration = 30.0  # Maximum segment duration
         self.embedding_dimensions = 1408  # Multimodal embedding dimensions
         self.batch_size = 10
+        self.enable_ocr = False  # Disable OCR by default to save costs
+        self.enable_labels = False  # Disable label detection by default
 
     def create_video_tables(self) -> None:
         """Create all necessary video processing tables."""
@@ -385,34 +387,40 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Failed to start speech transcription: {e}")
 
-        # Text detection (OCR)
-        try:
-            text_operation = self.video_client.annotate_video(
-                request={
-                    "input_uri": video_uri,
-                    "features": [videointelligence_v1.Feature.TEXT_DETECTION],
-                    "video_context": video_context,
-                }
-            )
-            operations['text'] = text_operation
-            logger.info("Started text detection")
-        except Exception as e:
-            logger.error(f"Failed to start text detection: {e}")
+        # Text detection (OCR) - only if enabled
+        if self.enable_ocr:
+            try:
+                text_operation = self.video_client.annotate_video(
+                    request={
+                        "input_uri": video_uri,
+                        "features": [videointelligence_v1.Feature.TEXT_DETECTION],
+                        "video_context": video_context,
+                    }
+                )
+                operations['text'] = text_operation
+                logger.info("Started text detection")
+            except Exception as e:
+                logger.error(f"Failed to start text detection: {e}")
+        else:
+            logger.info("OCR disabled for video processing (saves costs)")
 
-        # Label detection
-        try:
-            label_operation = self.video_client.annotate_video(
-                request={
-                    "input_uri": video_uri,
-                    "features": [
-                        videointelligence_v1.Feature.LABEL_DETECTION,
-                    ],
-                }
-            )
-            operations['labels'] = label_operation
-            logger.info("Started label detection")
-        except Exception as e:
-            logger.error(f"Failed to start label detection: {e}")
+        # Label detection - only if enabled
+        if self.enable_labels:
+            try:
+                label_operation = self.video_client.annotate_video(
+                    request={
+                        "input_uri": video_uri,
+                        "features": [
+                            videointelligence_v1.Feature.LABEL_DETECTION,
+                        ],
+                    }
+                )
+                operations['labels'] = label_operation
+                logger.info("Started label detection")
+            except Exception as e:
+                logger.error(f"Failed to start label detection: {e}")
+        else:
+            logger.info("Label detection disabled for video processing (saves costs)")
 
         return operations
 
@@ -757,33 +765,71 @@ class VideoProcessor:
             # Generate text embedding for OCR text
             text_embedding = self._generate_text_embedding(ocr['text'])
 
-            query = f"""
-            INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.video_ocr_text`
-            (ocr_id, video_id, uri, frame_time, text, confidence, bounding_box, text_embedding)
-            VALUES (
-                @ocr_id,
-                @video_id,
-                @uri,
-                @frame_time,
-                @text,
-                @confidence,
-                @bounding_box,
-                @text_embedding
-            )
-            """
+            # Handle bounding box - either use STRUCT or NULL
+            bbox = ocr.get('bounding_box')
+            if bbox and all(k in bbox for k in ['left_x', 'top_y', 'right_x', 'bottom_y']):
+                query = f"""
+                INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.video_ocr_text`
+                (ocr_id, video_id, uri, frame_time, text, confidence, bounding_box, text_embedding)
+                VALUES (
+                    @ocr_id,
+                    @video_id,
+                    @uri,
+                    @frame_time,
+                    @text,
+                    @confidence,
+                    STRUCT(
+                        @left_x AS left_x,
+                        @top_y AS top_y,
+                        @right_x AS right_x,
+                        @bottom_y AS bottom_y
+                    ),
+                    @text_embedding
+                )
+                """
 
-            job_config = bigquery.QueryJobConfig(
-                query_parameters=[
-                    bigquery.ScalarQueryParameter('ocr_id', 'STRING', ocr['ocr_id']),
-                    bigquery.ScalarQueryParameter('video_id', 'STRING', ocr['video_id']),
-                    bigquery.ScalarQueryParameter('uri', 'STRING', ocr['uri']),
-                    bigquery.ScalarQueryParameter('frame_time', 'FLOAT64', ocr['frame_time']),
-                    bigquery.ScalarQueryParameter('text', 'STRING', ocr['text']),
-                    bigquery.ScalarQueryParameter('confidence', 'FLOAT64', ocr['confidence']),
-                    bigquery.ScalarQueryParameter('bounding_box', 'JSON', json.dumps(ocr.get('bounding_box') or {})),
-                    bigquery.ArrayQueryParameter('text_embedding', 'FLOAT64', text_embedding or [])
-                ]
-            )
+                job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter('ocr_id', 'STRING', ocr['ocr_id']),
+                        bigquery.ScalarQueryParameter('video_id', 'STRING', ocr['video_id']),
+                        bigquery.ScalarQueryParameter('uri', 'STRING', ocr['uri']),
+                        bigquery.ScalarQueryParameter('frame_time', 'FLOAT64', ocr['frame_time']),
+                        bigquery.ScalarQueryParameter('text', 'STRING', ocr['text']),
+                        bigquery.ScalarQueryParameter('confidence', 'FLOAT64', ocr['confidence']),
+                        bigquery.ScalarQueryParameter('left_x', 'FLOAT64', bbox['left_x']),
+                        bigquery.ScalarQueryParameter('top_y', 'FLOAT64', bbox['top_y']),
+                        bigquery.ScalarQueryParameter('right_x', 'FLOAT64', bbox['right_x']),
+                        bigquery.ScalarQueryParameter('bottom_y', 'FLOAT64', bbox['bottom_y']),
+                        bigquery.ArrayQueryParameter('text_embedding', 'FLOAT64', text_embedding or [])
+                    ]
+                )
+            else:
+                # Insert without bounding box
+                query = f"""
+                INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.video_ocr_text`
+                (ocr_id, video_id, uri, frame_time, text, confidence, text_embedding)
+                VALUES (
+                    @ocr_id,
+                    @video_id,
+                    @uri,
+                    @frame_time,
+                    @text,
+                    @confidence,
+                    @text_embedding
+                )
+                """
+
+                job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter('ocr_id', 'STRING', ocr['ocr_id']),
+                        bigquery.ScalarQueryParameter('video_id', 'STRING', ocr['video_id']),
+                        bigquery.ScalarQueryParameter('uri', 'STRING', ocr['uri']),
+                        bigquery.ScalarQueryParameter('frame_time', 'FLOAT64', ocr['frame_time']),
+                        bigquery.ScalarQueryParameter('text', 'STRING', ocr['text']),
+                        bigquery.ScalarQueryParameter('confidence', 'FLOAT64', ocr['confidence']),
+                        bigquery.ArrayQueryParameter('text_embedding', 'FLOAT64', text_embedding or [])
+                    ]
+                )
 
             try:
                 self.client.client.query(query, job_config=job_config).result()
@@ -828,47 +874,23 @@ class VideoProcessor:
         # Extract shot change timestamps
         shot_changes = [segment.start_time for segment in segments]
 
-        # Process labels
-        label_data = []
-        for label in labels:
-            label_info = {
-                'entity_id': label.entity.entity_id if label.entity else '',
-                'description': label.entity.description if label.entity else '',
-                'language_code': label.entity.language_code if label.entity else 'en',
-                'category_entities': [
-                    {
-                        'entity_id': cat.entity_id,
-                        'description': cat.description
-                    }
-                    for cat in (label.category_entities or [])
-                ],
-                'segments': [
-                    {
-                        'start_time': seg.segment.start_time_offset.total_seconds() if seg.segment.start_time_offset else 0,
-                        'end_time': seg.segment.end_time_offset.total_seconds() if seg.segment.end_time_offset else 0,
-                        'confidence': seg.confidence
-                    }
-                    for seg in (label.segments or [])
-                ]
-            }
-            label_data.append(label_info)
-
         processing_metadata = {
             'processed_at': datetime.utcnow().isoformat(),
             'segment_count': len(segments),
             'features': ['shot_detection', 'speech_transcription', 'text_detection', 'label_detection']
         }
 
+        # For now, skip labels to avoid complex STRUCT issues
+        # We can add them later with proper STRUCT formatting
         query = f"""
         INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.video_metadata`
-        (video_id, uri, duration_seconds, segment_count, shot_changes, labels, processing_metadata)
+        (video_id, uri, duration_seconds, segment_count, shot_changes, processing_metadata)
         VALUES (
             @video_id,
             @uri,
             @duration,
             @segment_count,
             @shot_changes,
-            @labels,
             @processing_metadata
         )
         """
@@ -880,7 +902,6 @@ class VideoProcessor:
                 bigquery.ScalarQueryParameter('duration', 'FLOAT64', analysis_results.get('duration', 0)),
                 bigquery.ScalarQueryParameter('segment_count', 'INT64', len(segments)),
                 bigquery.ArrayQueryParameter('shot_changes', 'FLOAT64', shot_changes),
-                bigquery.ScalarQueryParameter('labels', 'JSON', json.dumps(label_data)),
                 bigquery.ScalarQueryParameter('processing_metadata', 'JSON', json.dumps(processing_metadata))
             ]
         )
