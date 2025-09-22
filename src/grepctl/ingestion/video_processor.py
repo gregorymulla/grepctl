@@ -314,50 +314,29 @@ class VideoProcessor:
         new_files = [f for f in video_files if f not in processed_uris]
         logger.info(f"Processing {len(new_files)} new video files")
 
-        # Process files in batches with progress
-        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
-        from rich.console import Console
+        # Process files in batches
+        for i in range(0, len(new_files), batch_size):
+            batch = new_files[i:i+batch_size]
+            batch_num = i//batch_size + 1
+            logger.info(f"Processing batch {batch_num} ({len(batch)} files)")
 
-        console = Console()
+            for j, video_uri in enumerate(batch):
+                video_name = video_uri.split('/')[-1]
+                video_number = i + j + 1
+                logger.info(f"[{video_number}/{len(new_files)}] Processing: {video_name}")
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeRemainingColumn(),
-            console=console
-        ) as progress:
-            overall_task = progress.add_task(
-                f"[cyan]Processing {len(new_files)} videos",
-                total=len(new_files)
-            )
-
-            for i in range(0, len(new_files), batch_size):
-                batch = new_files[i:i+batch_size]
-                batch_num = i//batch_size + 1
-                logger.info(f"Processing batch {batch_num} ({len(batch)} files)")
-
-                for j, video_uri in enumerate(batch):
-                    video_name = video_uri.split('/')[-1]
-                    progress.update(
-                        overall_task,
-                        description=f"[cyan]Processing video {i+j+1}/{len(new_files)}: {video_name[:30]}..."
-                    )
-
-                    try:
-                        result = self._process_single_video(video_uri)
-                        if result:
-                            stats['files_processed'] += 1
-                            stats['total_duration_seconds'] += result.get('duration', 0)
-                            stats['segments_created'] += result.get('segments', 0)
-                            stats['transcripts_created'] += result.get('transcripts', 0)
-                            stats['ocr_detections'] += result.get('ocr_detections', 0)
-                    except Exception as e:
-                        logger.error(f"Failed to process {video_uri}: {e}")
-                        stats['files_failed'] += 1
-
-                    progress.advance(overall_task)
+                try:
+                    result = self._process_single_video(video_uri)
+                    if result:
+                        stats['files_processed'] += 1
+                        stats['total_duration_seconds'] += result.get('duration', 0)
+                        stats['segments_created'] += result.get('segments', 0)
+                        stats['transcripts_created'] += result.get('transcripts', 0)
+                        stats['ocr_detections'] += result.get('ocr_detections', 0)
+                        logger.info(f"[{video_number}/{len(new_files)}] ✓ Completed: {video_name}")
+                except Exception as e:
+                    logger.error(f"Failed to process {video_uri}: {e}")
+                    stats['files_failed'] += 1
 
         stats['end_time'] = datetime.now()
         stats['duration'] = (stats['end_time'] - stats['start_time']).total_seconds()
@@ -402,22 +381,18 @@ class VideoProcessor:
         video_id = self._generate_video_id(video_uri)
 
         # Start parallel analysis operations
-        logger.info(f"[1/6] Starting video analysis for {video_name[:30]}...")
+        logger.debug(f"Starting video analysis...")
         operations = self._start_video_analysis(video_uri)
 
         # Wait for operations to complete and collect results
-        logger.info(f"[2/6] Waiting for analysis to complete...")
+        logger.debug(f"Waiting for analysis to complete...")
         analysis_results = self._wait_for_analysis(operations)
 
         # Process analysis results
-        logger.info(f"[3/6] Processing shot detection...")
         segments = self._process_shot_detection(analysis_results.get('shots', []), video_id, video_uri)
-
-        logger.info(f"[4/6] Processing speech transcription...")
         transcripts = self._process_speech_transcription(analysis_results.get('speech', []), video_id, video_uri)
 
         if self.enable_ocr:
-            logger.info(f"[5/6] Processing OCR text detection...")
             ocr_results = self._process_text_detection(analysis_results.get('text', []), video_id, video_uri)
         else:
             ocr_results = []
@@ -425,17 +400,13 @@ class VideoProcessor:
         labels = analysis_results.get('labels', [])
 
         # Generate embeddings for segments
-        logger.info(f"[5/6] Generating embeddings...")
         self._generate_segment_embeddings(segments, video_id)
 
         # Store video metadata
-        logger.info(f"[6/6] Storing metadata and updating search corpus...")
         self._store_video_metadata(video_id, video_uri, segments, labels, analysis_results)
 
         # Update search corpus
         self._update_search_corpus(video_id, video_uri, segments, transcripts, ocr_results)
-
-        logger.info(f"✓ Completed processing {video_name}")
 
         return {
             'video_id': video_id,
