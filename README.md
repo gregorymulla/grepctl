@@ -8,11 +8,17 @@
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
-**grepctl** is a utility that converts unstructured content in your data lake into a semantically searchable index with a single command:
 
-```bash
-grepctl ingest -b <bucket>
-```
+**grepctl** is a command-line and programmatic utility that enables semantic search across heterogeneous data lakes. By leveraging Google Cloud's advanced AI services and BigQuery's vector search capabilities, grepctl transforms unstructured data into a semantically searchable index. We describe the data ingestion pipeline, multimodal processing architecture, and the multiple interfaces—CLI, Web, Python, and SQL—that make this system both powerful and accessible.
+
+<br>
+
+<a href="https://youtu.be/KiJm0RMkHG0">
+  <img src="images/sample_screen.png" alt="FireSense Demo" width="800px">
+</a>
+
+
+
 
 ## Data Modalities & Processing
 
@@ -28,7 +34,15 @@ grepctl processes **9 different data types** automatically:
 | **Video** | Video Intelligence API analyzes frames and transcribes speech |
 | **JSON/CSV** | Structured data parsing with field preservation |
 
-Each modality is converted to text, chunked intelligently, and embedded using Vertex AI's text-embedding-004 model (768 dimensions) for semantic understanding.
+grepctl supports nine data modalities, including text, PDFs, office documents, images, audio, video, and structured JSON/CSV files. Each modality undergoes tailored extraction and processing steps, such as OCR for scanned documents and transcription for audio/video. All processed content is chunked and embedded into a 768-dimensional vector space.
+
+
+## Getting Started
+
+```bash
+grepctl ingest -b <bucket>
+```
+
 
 ## Four Search Interfaces
 

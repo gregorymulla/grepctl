@@ -1,6 +1,7 @@
 # grepctl - Semantic Search For Your Data Lake 
 
-**grepctl** is a utility that converts unstructured content in your data lake into a semantically searchable index with a single command:
+**grepctl** is a command-line and programmatic utility that enables semantic search across heterogeneous data lakes. By leveraging Google Cloud's advanced AI services and BigQuery's vector search capabilities, grepctl transforms unstructured data into a semantically searchable index. We describe the data ingestion pipeline, multimodal processing architecture, and the multiple interfaces—CLI, Web, Python, and SQL—that make this system both powerful and accessible.
+
 
 ```bash
 grepctl ingest -b <bucket>
@@ -20,11 +21,15 @@ grepctl processes **9 different data types** automatically:
 | **Video** | Video Intelligence API analyzes frames and transcribes speech |
 | **JSON/CSV** | Structured data parsing with field preservation |
 
-Each modality is converted to text, chunked intelligently, and embedded using Vertex AI's text-embedding-004 model (768 dimensions) for semantic understanding.
+
+grepctl supports nine data modalities, including text, PDFs, office documents, images, audio, video, and structured JSON/CSV files. Each modality undergoes tailored extraction and processing steps, such as OCR for scanned documents and transcription for audio/video. All processed content is chunked and embedded into a 768-dimensional vector space.
+
 
 ## Four Search Interfaces
 
-Access your indexed data through multiple interfaces:
+
+Users can query the indexed data via a command-line interface, a web-based UI, a Python API, or direct SQL through BigQuery. All interfaces ultimately leverage BigQuery's VECTOR_SEARCH functionality, ensuring fast and scalable retrieval.
+
 
 1. **CLI** - Command-line search:
    ```bash

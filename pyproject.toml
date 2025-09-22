@@ -1,6 +1,6 @@
 [project]
 name = "grepctl"
-version = "0.3.3"
+version = "0.3.4"
 description = "One-command orchestration for multimodal semantic search in BigQuery"
 readme = "README.md"
 authors = [
