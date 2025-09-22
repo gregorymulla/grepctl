@@ -521,6 +521,125 @@ def audio(ctx, setup, transcribe, batch_size, add_speakers, process_batch):
 
 
 @cli.command()
+@click.option('--setup', is_flag=True, help='Setup video processing tables')
+@click.option('--process', is_flag=True, help='Process video files from GCS')
+@click.option('--batch-size', default=5, help='Number of videos to process in each batch')
+@click.option('--search', help='Search videos using text query')
+@click.option('--search-type', type=click.Choice(['transcript', 'ocr', 'visual', 'hybrid']),
+              default='hybrid', help='Type of video search')
+@click.option('--top-k', '-k', default=10, help='Number of results to return')
+@click.pass_context
+def video(ctx, setup, process, batch_size, search, search_type, top_k):
+    """Manage video ingestion with shot detection, transcription, and OCR."""
+    config = ctx.obj['config']
+    client = ctx.obj['client']
+
+    from .ingestion.video_processor import VideoProcessor
+
+    processor = VideoProcessor(client, config)
+
+    if setup:
+        console.print("[yellow]Setting up video processing tables...[/yellow]")
+        processor.create_video_tables()
+        console.print("[green]✓ Video processing tables ready[/green]")
+        console.print("  - video_metadata: Store video info and labels")
+        console.print("  - video_segments: Store shot segments with embeddings")
+        console.print("  - video_transcripts: Store audio transcriptions")
+        console.print("  - video_ocr_text: Store detected on-screen text")
+
+    if process:
+        console.print(f"[yellow]Processing video files with batch size {batch_size}...[/yellow]")
+        console.print("[dim]Using Cloud Video Intelligence API for comprehensive analysis[/dim]")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Processing videos...", total=None)
+
+            stats = processor.process_video_files(batch_size=batch_size)
+
+            progress.update(task, completed=True)
+
+        # Display results
+        table = Table(title="Video Processing Results")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+
+        table.add_row("Files Processed", str(stats['files_processed']))
+        table.add_row("Files Failed", str(stats['files_failed']))
+        table.add_row("Total Duration", f"{stats['total_duration_seconds']:.1f} seconds")
+        table.add_row("Segments Created", str(stats['segments_created']))
+        table.add_row("Transcripts Created", str(stats['transcripts_created']))
+        table.add_row("OCR Detections", str(stats['ocr_detections']))
+        table.add_row("Processing Time", f"{stats['duration']:.1f} seconds")
+
+        console.print(table)
+
+        if stats['files_processed'] > 0:
+            console.print("\n[bold green]Videos ready for semantic search![/bold green]")
+            console.print("Try: grepctl video --search 'presentation slides' --search-type hybrid")
+
+    if search:
+        console.print(f"[yellow]Searching videos for: '{search}'[/yellow]")
+        console.print(f"[dim]Search type: {search_type}[/dim]")
+
+        results = processor.search_videos(search, search_type=search_type, top_k=top_k)
+
+        if results:
+            # Display search results
+            table = Table(title="Video Search Results", show_lines=True)
+            table.add_column("Rank", style="cyan", width=6)
+            table.add_column("Type", style="green", width=12)
+            table.add_column("Score", style="yellow", width=8)
+            table.add_column("Content/Label", style="white", overflow="fold")
+            table.add_column("Timestamp", style="blue", width=15)
+            table.add_column("Video", style="magenta", width=30, overflow="ellipsis")
+
+            for i, result in enumerate(results, 1):
+                # Format timestamp as clickable link
+                start_time = result.get('start_time', 0)
+                end_time = result.get('end_time', start_time)
+                timestamp = f"{int(start_time)}s-{int(end_time)}s"
+
+                # Get content based on result type
+                if result.get('result_type') == 'transcript':
+                    content = f"[Speaker {result.get('speaker_id', '?')}] {result.get('text', '')[:100]}..."
+                elif result.get('result_type') == 'ocr':
+                    content = f"OCR: {result.get('text', '')[:100]}..."
+                else:
+                    content = f"Shot: {result.get('shot_label', 'Visual segment')}"
+
+                video_name = result.get('uri', '').split('/')[-1]
+
+                table.add_row(
+                    str(i),
+                    result.get('result_type', 'unknown'),
+                    f"{result.get('score', 0):.3f}",
+                    content,
+                    timestamp,
+                    video_name
+                )
+
+            console.print(table)
+
+            # Provide deep links
+            console.print("\n[dim]To view a specific segment, use the timestamp to seek in the video.[/dim]")
+        else:
+            console.print(f"[yellow]No results found for '{search}'[/yellow]")
+
+    if not (setup or process or search):
+        console.print("[yellow]Please specify an action: --setup, --process, or --search[/yellow]")
+        console.print("\nExamples:")
+        console.print("  grepctl video --setup                      # Setup video processing tables")
+        console.print("  grepctl video --process                    # Process all video files")
+        console.print("  grepctl video --process --batch-size 3     # Process in smaller batches")
+        console.print("  grepctl video --search 'meeting notes'     # Search video content")
+        console.print("  grepctl video --search 'logo' --search-type ocr  # Search on-screen text")
+
+
+@cli.command()
 @click.pass_context
 def status(ctx):
     """Check the status of the semantic grep system."""

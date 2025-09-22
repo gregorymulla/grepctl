@@ -219,55 +219,10 @@ class SemanticSearch:
         """
 
     def _build_rerank_query(self, query: str, top_k: int, where_clause: str) -> str:
-        """Build vector search query with LLM reranking."""
-        return f"""
-        WITH query_embedding AS (
-            SELECT ml_generate_embedding_result AS embedding
-            FROM ML.GENERATE_EMBEDDING(
-                MODEL `{self.config.embedding_model}`,
-                (SELECT '{query.replace("'", "''")}' AS content)
-            )
-        ),
-        candidates AS (
-            SELECT
-                doc_id,
-                uri,
-                modality,
-                source,
-                created_at,
-                author,
-                channel,
-                distance,
-                text_content
-            FROM query_embedding,
-            VECTOR_SEARCH(
-                TABLE `{self.config.project_id}.{self.config.dataset_name}.search_corpus`,
-                'embedding',
-                (SELECT embedding FROM query_embedding),
-                top_k => {min(top_k * self.config.search_multiplier, self.config.rerank_threshold)}
-            ) AS search_result
-            WHERE {where_clause}
-        ),
-        reranked AS (
-            SELECT
-                *,
-                CAST(ML.GENERATE_TEXT(
-                    MODEL `{self.config.text_model}`,
-                    CONCAT(
-                        'Query: {query.replace("'", "''")}\\n',
-                        'Document snippet: ', SUBSTR(text_content, 1, 1500), '\\n',
-                        'Rate the relevance of this document to the query on a scale of 0 to 1. ',
-                        'Return only a decimal number between 0 and 1.'
-                    ),
-                    STRUCT(0.1 AS temperature)
-                ).ml_generate_text_result AS FLOAT64) AS rel_score
-            FROM candidates
-        )
-        SELECT *
-        FROM reranked
-        ORDER BY COALESCE(rel_score, 0) DESC, distance ASC
-        LIMIT {top_k}
-        """
+        """Build vector search query without LLM reranking (not available)."""
+        # Since ML.GENERATE_TEXT is not available, fall back to simple search
+        logger.warning("Reranking requested but ML.GENERATE_TEXT is not available. Using standard search.")
+        return self._build_simple_query(query, top_k, where_clause)
 
     def search_similar(self,
                        doc_id: str,

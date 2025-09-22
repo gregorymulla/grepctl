@@ -271,6 +271,29 @@ class SchemaManager:
         except Exception as e:
             logger.error(f"Failed to create vector index: {e}")
 
+    def init_models(self) -> None:
+        """Initialize ML models including embedding model."""
+        logger.info("Creating embedding model...")
+
+        # Create text embedding model using text-embedding-004
+        query = f"""
+        CREATE OR REPLACE MODEL `{self.config.project_id}.{self.config.dataset_name}.text_embedding_model`
+        REMOTE WITH CONNECTION `us.vertex-ai-connection`
+        OPTIONS (
+            ENDPOINT = 'text-embedding-004'
+        )
+        """
+
+        try:
+            job = self.client.execute_query(query)
+            job.result()
+            logger.info("Embedding model created successfully")
+        except Exception as e:
+            if "Already Exists" in str(e):
+                logger.info("Embedding model already exists")
+            else:
+                logger.error(f"Failed to create embedding model: {e}")
+
     def validate_schema(self) -> bool:
         """Validate that all required tables and functions exist."""
         required_tables = ['documents', 'document_chunks', 'search_corpus']

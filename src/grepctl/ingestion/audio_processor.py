@@ -196,11 +196,11 @@ class AudioProcessor:
             audio = speech_v1.RecognitionAudio(uri=audio_uri)
 
             config = speech_v1.RecognitionConfig(
-                encoding=speech_v1.RecognitionConfig.AudioEncoding.AUTO,
+                encoding=speech_v1.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
+                sample_rate_hertz=None,  # Auto-detect sample rate
                 language_code="en-US",
                 enable_automatic_punctuation=True,
                 enable_word_time_offsets=True,
-                enable_speaker_diarization=True,
                 diarization_config=speech_v1.SpeakerDiarizationConfig(
                     enable_speaker_diarization=True,
                     min_speaker_count=1,
@@ -219,58 +219,10 @@ class AudioProcessor:
             return None
 
     def _transcribe_long_audio(self, audio_uri: str) -> Optional[Dict[str, Any]]:
-        """Transcribe long audio files using Speech-to-Text v2 BatchRecognize."""
-        logger.info(f"Using batch transcription for {audio_uri.split('/')[-1]}")
-
-        try:
-            # Create recognizer
-            project_id = self.config.project_id
-            recognizer_name = f"projects/{project_id}/locations/global/recognizers/audio-recognizer"
-
-            # Configure recognition
-            config = speech_v2.RecognitionConfig(
-                auto_decoding_config=speech_v2.AutoDetectDecodingConfig(),
-                language_codes=["en-US"],
-                model="long",
-                features=speech_v2.RecognitionFeatures(
-                    enable_automatic_punctuation=True,
-                    enable_word_time_offsets=True,
-                    enable_speaker_diarization=True,
-                    diarization_config=speech_v2.SpeakerDiarizationConfig(
-                        min_speaker_count=1,
-                        max_speaker_count=10
-                    )
-                )
-            )
-
-            # Create batch recognize request
-            request = speech_v2.BatchRecognizeRequest(
-                recognizer=recognizer_name,
-                config=config,
-                files=[speech_v2.BatchRecognizeFileMetadata(uri=audio_uri)],
-                recognition_output_config=speech_v2.RecognitionOutputConfig(
-                    inline_response_config=speech_v2.InlineOutputConfig()
-                )
-            )
-
-            # Start batch recognition
-            operation = self.speech_client_v2.batch_recognize(request=request)
-
-            logger.info("Waiting for batch transcription to complete...")
-            response = operation.result(timeout=600)  # 10 minute timeout
-
-            # Parse results
-            if response.results and audio_uri in response.results:
-                result = response.results[audio_uri]
-                if result.transcript:
-                    return self._parse_batch_response(result, audio_uri)
-
-            return None
-
-        except Exception as e:
-            logger.error(f"Batch transcription failed: {e}")
-            # Fall back to v1 long running recognize
-            return self._transcribe_long_audio_v1(audio_uri)
+        """Transcribe long audio files - directly use v1 API since v2 requires recognizer setup."""
+        logger.info(f"Using long-running transcription for {audio_uri.split('/')[-1]}")
+        # Directly use v1 API which is more straightforward
+        return self._transcribe_long_audio_v1(audio_uri)
 
     def _transcribe_long_audio_v1(self, audio_uri: str) -> Optional[Dict[str, Any]]:
         """Fallback transcription using v1 long running recognize."""
@@ -280,11 +232,11 @@ class AudioProcessor:
             audio = speech_v1.RecognitionAudio(uri=audio_uri)
 
             config = speech_v1.RecognitionConfig(
-                encoding=speech_v1.RecognitionConfig.AudioEncoding.AUTO,
+                encoding=speech_v1.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
+                sample_rate_hertz=None,  # Auto-detect sample rate
                 language_code="en-US",
                 enable_automatic_punctuation=True,
                 enable_word_time_offsets=True,
-                enable_speaker_diarization=True,
                 diarization_config=speech_v1.SpeakerDiarizationConfig(
                     enable_speaker_diarization=True,
                     min_speaker_count=1,
@@ -578,22 +530,6 @@ class AudioProcessor:
 
     def _store_audio_metadata(self, audio_uri: str, transcription: Dict) -> None:
         """Store detailed audio metadata."""
-        query = f"""
-        INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.audio_metadata`
-        (audio_id, uri, duration_seconds, speaker_count, transcription_confidence,
-         speaker_segments, word_timestamps, processing_metadata)
-        VALUES (
-            GENERATE_UUID(),
-            @uri,
-            @duration,
-            @speaker_count,
-            @confidence,
-            @speaker_segments,
-            @word_timestamps,
-            @processing_metadata
-        )
-        """
-
         from google.cloud import bigquery
 
         # Prepare speaker segments for BigQuery
@@ -612,21 +548,110 @@ class AudioProcessor:
 
         processing_metadata = {
             'processed_at': datetime.utcnow().isoformat(),
-            'model': 'speech-to-text-v2',
+            'model': 'speech-to-text-v1',
             'language': 'en-US'
         }
 
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter('uri', 'STRING', audio_uri),
-                bigquery.ScalarQueryParameter('duration', 'FLOAT64', transcription.get('duration_seconds', 0)),
-                bigquery.ScalarQueryParameter('speaker_count', 'INT64', transcription.get('speaker_count', 1)),
-                bigquery.ScalarQueryParameter('confidence', 'FLOAT64', transcription.get('confidence', 0)),
-                bigquery.ArrayQueryParameter('speaker_segments', 'STRUCT', speaker_segments),
-                bigquery.ArrayQueryParameter('word_timestamps', 'STRUCT', word_timestamps),
-                bigquery.ScalarQueryParameter('processing_metadata', 'JSON', json.dumps(processing_metadata))
-            ]
-        )
+        # Build query based on whether we have segments/timestamps
+        if speaker_segments and word_timestamps:
+            query = f"""
+            INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.audio_metadata`
+            (audio_id, uri, duration_seconds, speaker_count, transcription_confidence,
+             speaker_segments, word_timestamps, processing_metadata)
+            VALUES (
+                GENERATE_UUID(),
+                @uri,
+                @duration,
+                @speaker_count,
+                @confidence,
+                @speaker_segments,
+                @word_timestamps,
+                @processing_metadata
+            )
+            """
+        elif speaker_segments:
+            query = f"""
+            INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.audio_metadata`
+            (audio_id, uri, duration_seconds, speaker_count, transcription_confidence,
+             speaker_segments, processing_metadata)
+            VALUES (
+                GENERATE_UUID(),
+                @uri,
+                @duration,
+                @speaker_count,
+                @confidence,
+                @speaker_segments,
+                @processing_metadata
+            )
+            """
+        elif word_timestamps:
+            query = f"""
+            INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.audio_metadata`
+            (audio_id, uri, duration_seconds, speaker_count, transcription_confidence,
+             word_timestamps, processing_metadata)
+            VALUES (
+                GENERATE_UUID(),
+                @uri,
+                @duration,
+                @speaker_count,
+                @confidence,
+                @word_timestamps,
+                @processing_metadata
+            )
+            """
+        else:
+            query = f"""
+            INSERT INTO `{self.config.project_id}.{self.config.dataset_name}.audio_metadata`
+            (audio_id, uri, duration_seconds, speaker_count, transcription_confidence,
+             processing_metadata)
+            VALUES (
+                GENERATE_UUID(),
+                @uri,
+                @duration,
+                @speaker_count,
+                @confidence,
+                @processing_metadata
+            )
+            """
+
+        # Build query parameters based on available data
+        query_params = [
+            bigquery.ScalarQueryParameter('uri', 'STRING', audio_uri),
+            bigquery.ScalarQueryParameter('duration', 'FLOAT64', transcription.get('duration_seconds', 0)),
+            bigquery.ScalarQueryParameter('speaker_count', 'INT64', transcription.get('speaker_count', 1)),
+            bigquery.ScalarQueryParameter('confidence', 'FLOAT64', transcription.get('confidence', 0)),
+            bigquery.ScalarQueryParameter('processing_metadata', 'JSON', json.dumps(processing_metadata))
+        ]
+
+        # Only add array parameters if they're not empty and part of the query
+        if speaker_segments:
+            # Create structured values for BigQuery
+            segment_values = []
+            for seg in speaker_segments:
+                segment_values.append(bigquery.StructQueryParameter(
+                    None,
+                    bigquery.ScalarQueryParameter('speaker_id', 'STRING', seg['speaker_id']),
+                    bigquery.ScalarQueryParameter('start_time', 'FLOAT64', seg['start_time']),
+                    bigquery.ScalarQueryParameter('end_time', 'FLOAT64', seg['end_time']),
+                    bigquery.ScalarQueryParameter('text', 'STRING', seg['text']),
+                    bigquery.ScalarQueryParameter('confidence', 'FLOAT64', seg['confidence'])
+                ))
+            query_params.append(bigquery.ArrayQueryParameter('speaker_segments', 'STRUCT', segment_values))
+
+        if word_timestamps:
+            # Create structured values for BigQuery
+            word_values = []
+            for word in word_timestamps:
+                word_values.append(bigquery.StructQueryParameter(
+                    None,
+                    bigquery.ScalarQueryParameter('word', 'STRING', word['word']),
+                    bigquery.ScalarQueryParameter('start_time', 'FLOAT64', word['start_time']),
+                    bigquery.ScalarQueryParameter('end_time', 'FLOAT64', word['end_time']),
+                    bigquery.ScalarQueryParameter('speaker_id', 'STRING', word.get('speaker_id', '0'))
+                ))
+            query_params.append(bigquery.ArrayQueryParameter('word_timestamps', 'STRUCT', word_values))
+
+        job_config = bigquery.QueryJobConfig(query_parameters=query_params)
 
         try:
             self.client.client.query(query, job_config=job_config).result()

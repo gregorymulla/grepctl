@@ -160,77 +160,6 @@ def init():
     pass
 
 
-@init.command('all')
-@click.option('--bucket', '-b', default=DEFAULT_BUCKET, help='GCS bucket name')
-@click.option('--project', '-p', default=DEFAULT_PROJECT, help='GCP project ID')
-@click.option('--dataset', '-d', default=DEFAULT_DATASET, help='BigQuery dataset name')
-@click.option('--auto-ingest', is_flag=True, help='Automatically ingest all data after setup')
-def init_all(bucket, project, dataset, auto_ingest):
-    """Complete one-command setup with optional auto-ingestion."""
-    console.print(Panel.fit("🚀 [bold cyan]Complete System Initialization[/bold cyan]", border_style="cyan"))
-
-    # Update configuration
-    ctl.config['bucket'] = bucket
-    ctl.config['project_id'] = project
-    ctl.config['dataset'] = dataset
-    ctl.save_config()
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
-        TimeRemainingColumn(),
-        console=console
-    ) as progress:
-
-        # Enable APIs
-        task = progress.add_task("Enabling Google Cloud APIs...", total=len(REQUIRED_APIS))
-        for api in REQUIRED_APIS:
-            cmd = ['gcloud', 'services', 'enable', api, '--project', project]
-            ctl.run_command(cmd, check=False)
-            progress.advance(task)
-
-        # Create dataset
-        task = progress.add_task("Creating BigQuery dataset...", total=1)
-        try:
-            client = ctl.get_bq_client()
-            dataset_id = f"{project}.{dataset}"
-            dataset_obj = bigquery.Dataset(dataset_id)
-            dataset_obj.location = "US"
-            client.create_dataset(dataset_obj, exists_ok=True)
-            progress.advance(task)
-        except Exception as e:
-            console.print(f"[yellow]Dataset creation: {e}[/yellow]")
-            progress.advance(task)
-
-        # Create tables
-        task = progress.add_task("Creating tables and models...", total=1)
-        if Path('src/grepctl/scripts/setup_mmgrep.py').exists():
-            ctl.run_python_script('src/grepctl/scripts/setup_mmgrep.py')
-        progress.advance(task)
-
-        # Auto-ingest if requested
-        if auto_ingest:
-            task = progress.add_task("Ingesting all modalities...", total=len(MODALITIES))
-            for modality in MODALITIES:
-                console.print(f"[cyan]Processing {modality}...[/cyan]")
-                if modality in ['text', 'markdown']:
-                    # Use grepctl ingest for text/markdown
-                    cmd = ['uv', 'run', 'grepctl', 'ingest', '-b', bucket, '-m', modality]
-                    ctl.run_command(cmd, check=False)
-                elif MODALITIES[modality]['script']:
-                    ctl.run_python_script(MODALITIES[modality]['script'])
-                progress.advance(task)
-
-            # Generate embeddings
-            console.print("[cyan]Generating embeddings...[/cyan]")
-            ctl.run_python_script('src/grepctl/scripts/fix_embeddings.py')
-
-    console.print("[bold green]✅ System initialization complete![/bold green]")
-    console.print("\n[cyan]Next steps:[/cyan]")
-    console.print("  1. Check status: [yellow]grepctl status[/yellow]")
-    console.print("  2. Search data: [yellow]grepctl search 'your query'[/yellow]")
-
 
 @init.command('config')
 @click.option('--project', '-p', help='GCP project ID')
@@ -283,11 +212,11 @@ def init_models():
 
     client = ctl.get_bq_client()
 
-    # Create embedding model
+    # Create embedding model with correct connection string
     model_query = f"""
     CREATE OR REPLACE MODEL `{ctl.config['project_id']}.{ctl.config['dataset']}.text_embedding_model`
-    REMOTE WITH CONNECTION `{ctl.config['project_id']}.US.{ctl.config.get('vertex_connection', 'vertex-ai-connection')}`
-    OPTIONS (ENDPOINT = 'text-embedding-004')
+    REMOTE WITH CONNECTION `us.vertex-ai-connection`
+    OPTIONS (endpoint = 'text-embedding-004')
     """
 
     try:
@@ -388,6 +317,33 @@ def ingest_all(bucket, resume):
                 # Use grepctl for text/markdown
                 cmd = ['uv', 'run', 'grepctl', 'ingest', '-b', bucket, '-m', modality]
                 ctl.run_command(cmd, check=False)
+
+            elif modality == 'images':
+                # Handle images with the new image processor
+                console.print("[yellow]Setting up and ingesting images...[/yellow]")
+                # First setup the image descriptions if needed
+                cmd = ['uv', 'run', 'grepctl', 'images', '--setup']
+                ctl.run_command(cmd, check=False)
+                # Add descriptions
+                cmd = ['uv', 'run', 'grepctl', 'images', '--add-descriptions']
+                ctl.run_command(cmd, check=False)
+                # Ingest images
+                cmd = ['uv', 'run', 'grepctl', 'images', '--ingest']
+                ctl.run_command(cmd, check=False)
+
+            elif modality == 'pdf':
+                # Handle PDFs with the new PDF processor
+                console.print("[yellow]Setting up and ingesting PDFs...[/yellow]")
+                # First setup the PDF metadata if needed
+                cmd = ['uv', 'run', 'grepctl', 'pdfs', '--setup']
+                ctl.run_command(cmd, check=False)
+                # Add metadata
+                cmd = ['uv', 'run', 'grepctl', 'pdfs', '--add-metadata']
+                ctl.run_command(cmd, check=False)
+                # Ingest PDFs
+                cmd = ['uv', 'run', 'grepctl', 'pdfs', '--ingest']
+                ctl.run_command(cmd, check=False)
+
             elif config['script']:
                 ctl.run_python_script(config['script'])
 
@@ -690,6 +646,42 @@ def serve(host, port, reload, theme_config, workers):
     except Exception as e:
         console.print(f"[red]Failed to start server: {e}[/red]")
         sys.exit(1)
+
+
+# ============= SETUP COMMAND =============
+@cli.command()
+def setup():
+    """Complete one-command setup for the entire mmgrep system."""
+    console.print(Panel.fit("🚀 [bold cyan]Setting up BigQuery Semantic Grep (mmgrep)[/bold cyan]", border_style="cyan"))
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        steps = [
+            ("Creating configuration", lambda: init_config(None, None, None)),
+            ("Creating BigQuery dataset", lambda: init_dataset()),
+            ("Creating embedding model", lambda: init_models()),
+            ("Enabling Google Cloud APIs", lambda: apis_enable(True, [])),
+        ]
+
+        task = progress.add_task("Setting up mmgrep...", total=len(steps))
+
+        for step_name, step_func in steps:
+            progress.update(task, description=f"{step_name}...")
+            try:
+                step_func()
+                console.print(f"[green]✓ {step_name} complete[/green]")
+            except Exception as e:
+                console.print(f"[yellow]⚠ {step_name}: {e}[/yellow]")
+            progress.advance(task)
+
+    console.print("\n[bold green]Setup complete![/bold green]")
+    console.print("\n[cyan]Next steps:[/cyan]")
+    console.print("1. Run [bold]grepctl ingest all -b gcm-data-lake[/bold] to ingest data")
+    console.print("2. Run [bold]grepctl search 'your query'[/bold] to search")
+    console.print("3. Run [bold]grepctl serve[/bold] to start the web interface")
 
 
 # ============= MAIN =============

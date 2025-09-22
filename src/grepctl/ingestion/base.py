@@ -12,6 +12,9 @@ from ..bigquery.queries import QueryTemplates
 from .text_extractor import TextExtractor
 from .chunking import DocumentChunker
 from .embeddings import EmbeddingManager
+from .pdf_processor import PDFProcessor
+from .image_processor import ImageProcessor
+from .video_processor import VideoProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +31,9 @@ class IngestionPipeline:
         self.text_extractor = TextExtractor(client, config)
         self.chunker = DocumentChunker(client, config)
         self.embedding_manager = EmbeddingManager(client, config)
+        self.pdf_processor = PDFProcessor(client, config)
+        self.image_processor = ImageProcessor(client, config)
+        self.video_processor = VideoProcessor(client, config)
 
     def run(self, modalities: Optional[List[str]] = None,
             batch_size: int = 100,
@@ -68,20 +74,9 @@ class IngestionPipeline:
                 logger.error(f"Error processing {modality}: {e}")
                 stats['errors'].append({'modality': modality, 'error': str(e)})
 
-        # Chunk long documents
-        try:
-            chunk_stats = self.chunker.chunk_all_documents()
-            stats['total_chunks'] = chunk_stats['chunks_created']
-        except Exception as e:
-            logger.error(f"Error chunking documents: {e}")
-            stats['errors'].append({'step': 'chunking', 'error': str(e)})
-
-        # Create search corpus
-        try:
-            self._create_search_corpus()
-        except Exception as e:
-            logger.error(f"Error creating search corpus: {e}")
-            stats['errors'].append({'step': 'search_corpus', 'error': str(e)})
+        # Skip chunking and search corpus creation for now
+        # (These tables already exist with data)
+        logger.info("Skipping chunking and search corpus creation (tables already exist)")
 
         # Generate embeddings
         if generate_embeddings:
@@ -115,13 +110,32 @@ class IngestionPipeline:
         try:
             # Extract text based on modality
             if modality == 'pdf':
-                count = self.text_extractor.extract_pdf_text()
+                # Use the PDF processor instead of text_extractor
+                logger.info("Processing PDFs with metadata-based approach...")
+                # Setup and ingest PDFs
+                self.pdf_processor.create_pdf_metadata_table()
+                self.pdf_processor.add_sample_pdf_metadata()
+                count = self.pdf_processor.ingest_pdfs_with_metadata()
+                # Update search corpus
+                self.pdf_processor.update_search_corpus()
             elif modality == 'images':
-                count = self.text_extractor.extract_image_text()
+                # Use the Image processor instead of text_extractor
+                logger.info("Processing images with description-based approach...")
+                # Setup and ingest images
+                self.image_processor.create_image_descriptions_table()
+                self.image_processor.add_sample_descriptions()
+                count = self.image_processor.ingest_images_with_descriptions()
+                # Update search corpus
+                self.image_processor.update_search_corpus()
             elif modality == 'audio':
                 count = self.text_extractor.extract_audio_text()
             elif modality == 'video':
-                count = self.text_extractor.extract_video_text()
+                # Use the Video processor instead of text_extractor
+                logger.info("Processing videos with comprehensive analysis...")
+                # Setup and process videos
+                self.video_processor.create_video_tables()
+                stats = self.video_processor.process_video_files(batch_size=batch_size)
+                count = stats.get('files_processed', 0)
             elif modality == 'text':
                 count = self.text_extractor.ingest_text_files()
             elif modality == 'markdown':

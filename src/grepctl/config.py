@@ -16,7 +16,8 @@ class Config:
     # BigQuery settings
     project_id: str = "semgrep-472018"
     dataset_name: str = "grepmm"
-    location: str = "US"
+    location: str = "US"  # BigQuery dataset location
+    vertex_location: str = "us-central1"  # Vertex AI location
 
     # GCS settings
     gcs_bucket: str = "gcm-data-lake"
@@ -187,7 +188,7 @@ def create_default_config(path: Path) -> None:
 
     # Set some sensible defaults
     config.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'your-project-id')
-    config.location = os.environ.get('GOOGLE_CLOUD_LOCATION', 'US')
+    config.location = os.environ.get('GOOGLE_CLOUD_LOCATION', 'us-central1')
 
     # Save to file
     config.to_yaml(path)

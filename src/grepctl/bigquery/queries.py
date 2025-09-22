@@ -32,27 +32,19 @@ class QueryTemplates:
             'pdf' AS modality,
             'pdf' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                CONCAT(
-                    'Extract all text content from this PDF. ',
-                    'Preserve structure, headings, and important information. ',
-                    'Output clean, readable text only.'
-                ),
-                data
-            ).ml_generate_text_result AS text_content,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
+            SAFE_CONVERT_BYTES_TO_STRING(data) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_pdf`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -71,27 +63,24 @@ class QueryTemplates:
             'image' AS modality,
             'screenshot' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                CONCAT(
-                    'Perform OCR on this image. ',
-                    'Extract all visible text. ',
-                    'If text is sparse, describe the visual content briefly.'
-                ),
-                data
-            ).ml_generate_text_result AS text_content,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
+            CONCAT(
+                'Image file: ', SPLIT(uri, '/')[ARRAY_LENGTH(SPLIT(uri, '/')) - 1], '\\n',
+                'Type: ', content_type, '\\n',
+                'Size: ', CAST(size AS STRING), ' bytes\\n',
+                'Note: OCR text extraction requires ML model configuration'
+            ) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_images`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -110,23 +99,24 @@ class QueryTemplates:
             'audio' AS modality,
             'recording' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                'Transcribe this audio file. Include speaker turns if identifiable.',
-                data
-            ).ml_generate_text_result AS text_content,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
+            CONCAT(
+                'Audio file: ', SPLIT(uri, '/')[ARRAY_LENGTH(SPLIT(uri, '/')) - 1], '\\n',
+                'Type: ', content_type, '\\n',
+                'Size: ', CAST(size AS STRING), ' bytes\\n',
+                'Note: Audio transcription requires ML model configuration'
+            ) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_audio`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -145,27 +135,24 @@ class QueryTemplates:
             'video' AS modality,
             'video' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
-            ML.GENERATE_TEXT(
-                MODEL `{text_model}`,
-                CONCAT(
-                    'Transcribe all spoken content in this video. ',
-                    'Include rough timestamps if possible. ',
-                    'Note any important visual elements that provide context.'
-                ),
-                data
-            ).ml_generate_text_result AS text_content,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
+            CONCAT(
+                'Video file: ', SPLIT(uri, '/')[ARRAY_LENGTH(SPLIT(uri, '/')) - 1], '\\n',
+                'Type: ', content_type, '\\n',
+                'Size: ', CAST(size AS STRING), ' bytes\\n',
+                'Note: Video transcription requires ML model configuration'
+            ) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
                 size,
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_video`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -184,8 +171,8 @@ class QueryTemplates:
             'text' AS modality,
             'file' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
             SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
@@ -193,10 +180,10 @@ class QueryTemplates:
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_text`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -215,8 +202,8 @@ class QueryTemplates:
             'text' AS modality,
             'markdown' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
             SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
@@ -224,10 +211,10 @@ class QueryTemplates:
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_markdown`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -246,8 +233,8 @@ class QueryTemplates:
             'text' AS modality,
             'json' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
             SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
@@ -255,10 +242,10 @@ class QueryTemplates:
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_json`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
@@ -277,8 +264,8 @@ class QueryTemplates:
             'text' AS modality,
             'csv' AS source,
             CURRENT_TIMESTAMP() AS created_at,
-            NULL AS author,
-            NULL AS channel,
+            CAST(NULL AS STRING) AS author,
+            CAST(NULL AS STRING) AS channel,
             SAFE_CAST(data AS STRING) AS text_content,
             content_type AS mime_type,
             TO_JSON(STRUCT(
@@ -286,10 +273,10 @@ class QueryTemplates:
                 updated AS last_modified,
                 generation
             )) AS meta,
-            NULL AS chunk_index,
-            NULL AS chunk_start,
-            NULL AS chunk_end,
-            NULL AS embedding
+            CAST(NULL AS INT64) AS chunk_index,
+            CAST(NULL AS INT64) AS chunk_start,
+            CAST(NULL AS INT64) AS chunk_end,
+            CAST(NULL AS ARRAY<FLOAT64>) AS embedding
         FROM `{project_id}.{dataset}.obj_csv`
         WHERE uri NOT IN (
             SELECT DISTINCT uri FROM `{project_id}.{dataset}.documents`
